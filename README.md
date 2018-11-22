@@ -11,6 +11,14 @@ The default is to point to the Mila file system for data and models. See [the ma
 
 ---
 
+# Environment
+
+Dependencies are listed in [`environment.yml`](environment.yml). To create the conda environment, use the following command.
+
+```
+conda env create -f environment.yml
+```
+
 # Data
 
 Data files `classes.hdf5`, `raw_sim.hdf5` and `raw_real.hdf5` must be placed in `data/raw`
