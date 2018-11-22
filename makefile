@@ -21,6 +21,16 @@ data/processed/processed.pkl:  data/raw/data_info.txt
 		data/raw/raw.npy data/raw/classes.npy \
 		data/processed/processed.pkl
 
+data/videos/download.info:
+	python src/data/download_videos.py \
+	https://gateway.ipfs.io/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/ \
+	data/videos/list_of_videos.txt \
+	data/videos
+
+data/raw/raw_real.hdf5: data/videos/download.info
+	python src/data/extract_frames.py data/videos data/raw/raw_real.hdf5 \
+	--frame-skip 10
+
 # train and save
 models/segnet.pth: data/processed/processed.pkl
 	python src/models/train.py data/processed/processed.pkl \
