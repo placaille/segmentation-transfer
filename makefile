@@ -10,7 +10,7 @@ local:
 	$(eval MODEL_DIR=./models)
 	@echo Setting DATA_DIR and MODEL_DIR to ./data and ./models
 
-all: data/basic_encoder_decoder.pth
+all: $(MODEL_DIR)/segnet.pth
 
 clean: clear-models
 	rm -f $(DATA_DIR)/processed/*.pkl
@@ -20,14 +20,14 @@ clear-models:
 	rm -f $(MODEL_DIR)/*.pth
 
 data/raw/data_info.txt:
-	python src/data/explore.py data/raw/raw.npy $(DATA_DIR)/raw/data_info.txt
-	python src/data/explore.py data/raw/segmented.npy $(DATA_DIR)/raw/data_info.txt
-	python src/data/explore.py data/raw/classes.npy $(DATA_DIR)/raw/data_info.txt
+	python src/data/explore.py $(DATA_DIR)/raw/raw.npy $(DATA_DIR)/raw/data_info.txt
+	python src/data/explore.py $(DATA_DIR)/raw/segmented.npy $(DATA_DIR)/raw/data_info.txt
+	python src/data/explore.py $(DATA_DIR)/raw/classes.npy $(DATA_DIR)/raw/data_info.txt
 
 # tuple of (train, valid, test) TensorDataset
-data/processed/processed.pkl:  data/raw/data_info.txt
+data/processed/processed.pkl:  $(DATA_DIR)/raw/data_info.txt
 	python src/data/preprocess.py \
-		$(DATA_DIR)/raw/raw.npy data/raw/classes.npy \
+		$(DATA_DIR)/raw/raw.npy $(DATA_DIR)/raw/classes.npy \
 		$(DATA_DIR)/processed/processed.pkl
 
 data/videos/download.info:
@@ -36,17 +36,17 @@ data/videos/download.info:
 	data/videos/list_of_videos.txt \
 	$(DATA_DIR)/videos
 
-data/raw/raw_real.hdf5: data/videos/download.info
+data/raw/raw_real.hdf5: $(DATA_DIR)/videos/download.info
 	python src/data/extract_frames.py $(DATA_DIR)/videos $(DATA_DIR)/raw/raw_real.hdf5 \
 	--frame-skip 10
 
 # train and save
-models/segnet.pth: data/processed/processed.pkl
+models/segnet.pth: $(DATA_DIR)/processed/processed.pkl
 	python src/models/train.py $(DATA_DIR)/processed/processed.pkl \
 	--save-dir=$(MODEL_DIR) \
 	--model-name=segnet
 
-# train and save
-segnet: data/processed/processed.pkl
-	python src/models/train.py data/processed/processed.pkl \
+# train only (no save)
+segnet: $(DATA_DIR)/processed/processed.pkl
+	python src/models/train.py $(DATA_DIR)/processed/processed.pkl \
 	--model-name=segnet
