@@ -1,9 +1,10 @@
 # segmentation-transfer
 
-To launch any `make` with reference to local directories (`./data` and `./models`), prepend your target with `local`. For example,
+To launch any `make` with reference to local directories (`./data` and `./models`), pass the anything to the variable `local` other than `false`. For example,
 
 ```
-make local all
+make all local=1
+make all local=true
 ```
 The above will run with the local subdirectories as reference.
 

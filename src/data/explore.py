@@ -1,4 +1,5 @@
 import click
+import h5py
 import numpy as np
 
 
@@ -13,8 +14,9 @@ def log_data_info(file_path, output_path, data):
 
 
 def read_raw_data(file_name):
-    with open(file_name, 'rb') as file:
-        data = np.load(file)
+    with h5py.File(file_name) as file:
+        data_name = list(file)[0]
+        data = file[data_name][:]
     return data
 
 
