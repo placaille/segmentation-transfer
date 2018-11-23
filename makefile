@@ -11,7 +11,12 @@ local:
 	@echo Setting DATA_DIR and MODEL_DIR to ./data and ./models
 
 
-all: segnet.pth
+data/raw/data_info.txt=$(DATA_DIR)/raw/data_info.txt
+data/processed/processed.pkl=$(DATA_DIR)/processed/processed.pkl
+
+
+
+all: $(models/segnet.pth)
 
 clean: clear-models
 	rm -f $(DATA_DIR)/processed/*.pkl
@@ -20,20 +25,20 @@ clean: clear-models
 clear-models:
 	rm -f $(MODEL_DIR)/*.pth
 
+.PHONY: data/raw/data_info.txt
 data/raw/data_info.txt:$(data/raw/data_info.txt)
-data/raw/data_info.txt=$(DATA_DIR)/raw/data_info.txt
 $(data/raw/data_info.txt):
-	python src/data/explore.py $(DATA_DIR)/raw/raw.npy $(DATA_DIR)/raw/data_info.txt
-	python src/data/explore.py $(DATA_DIR)/raw/segmented.npy $(DATA_DIR)/raw/data_info.txt
-	python src/data/explore.py $(DATA_DIR)/raw/classes.npy $(DATA_DIR)/raw/data_info.txt
+	python src/data/explore.py $(DATA_DIR)/raw/raw_real.hdf5 $(DATA_DIR)/raw/data_info.txt
+# python src/data/explore.py $(DATA_DIR)/raw/raw_sim.npy $(DATA_DIR)/raw/data_info.txt
+# python src/data/explore.py $(DATA_DIR)/raw/classes.npy $(DATA_DIR)/raw/data_info.txt
 
+.PHONY: data/processed/processed.pkl
 # pre-process data to TensorDataset
 data/processed/processed.pkl:$(data/processed/processed.pkl)
-data/processed/processed.pkl=$(DATA_DIR)/processed/processed.pkl
-$(data/processed/processed.pkl):  raw/data_info.txt
+$(data/processed/processed.pkl): $(data/raw/data_info.txt)
 	python src/data/preprocess.py \
-		$(DATA_DIR)/raw/raw.npy $(DATA_DIR)/raw/classes.npy \
-		$(DATA_DIR)/processed/processed.pkl
+	$(DATA_DIR)/raw/raw_real.hdf5 $(DATA_DIR)/raw/raw_sim.npy $(DATA_DIR)/raw/classes.npy \
+	$(DATA_DIR)/processed/processed.pkl
 
 # download videos
 data/videos/download.info:$(data/videos/download.info)
