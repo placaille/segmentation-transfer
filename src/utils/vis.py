@@ -1,13 +1,11 @@
 import numpy as np
 import visdom
-from common.utils import get_args_dict
 
 
-def setup(args):
-    visualiser = visdom.Visdom(args.server, port=args.port, env=args.exp_name, use_incoming_socket=False)
-    if not args.reload:
-        visualiser.delete_env(args.exp_name)
-    visualise_text(visualiser, str(get_args_dict(args)))
+def setup(server, port, exp_name, reload=False):
+    visualiser = visdom.Visdom(server, port=port, env=exp_name, use_incoming_socket=False)
+    if not reload:
+        visualiser.delete_env(exp_name)
     return visualiser
 
 

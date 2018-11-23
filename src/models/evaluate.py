@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from utils import logit_to_img
 
 
 def evaluate(model, data_iterator):
@@ -16,6 +17,12 @@ def evaluate(model, data_iterator):
 
     count += torch.sum(labels == preds)
     total += labels.nelement()
+
+  images, labels = iter(data_iterator).next()
+  logits = model(images)
+  outputs['image'] = images
+  outputs['target'] = logit_to_img(labels)
+  outputs['segmented'] = logit_to_img(logits)
 
   # compute accuracy
   with np.errstate(divide='ignore', invalid='ignore'):

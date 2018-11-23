@@ -10,6 +10,7 @@ sys.path.append('src')
 from torch import nn, optim
 from data import DataProvider
 from utils import CommandWithConfigFile, EarlyStopper
+from utils import vis
 from evaluate import evaluate
 from itertools import count
 from timeit import default_timer as timer
@@ -27,8 +28,12 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
               'segnet',
               ]), help='Name of model architecture (default segnet)')
 @click.option('--early-stop-patience', type=int, default=10)
+@click.option('--server', type=str, default='http://localhost')
+@click.option('--port', type=str, default='8067')
 def main(data_file, save_dir, batch_size, config_file, model_name,
-         early_stop_patience):
+         early_stop_patience, server, port):
+
+    visualizer = vis.setup(server, port, model_name)
 
     print('Loading data..')
     data_provider = DataProvider(data_file, batch_size, device)
@@ -65,12 +70,19 @@ def main(data_file, save_dir, batch_size, config_file, model_name,
             epoch_loss += loss_seg.item()
 
         results['epoch_avg_loss'] = np.divide(epoch_loss, batch_id+1)
-        results.update(evaluate(model, data_provider.valid_iterator))
+        results.update(evaluate(model, data_provider.valid_iterator, visualizer))
         early_stopper.update(results, epoch_id)
 
-        print('Epoch {:3d} - Batch {:6d} - loss {:7.4f} - valid acc {:7.4f} - {:4.1f} secs'.format(
+        print('epoch {:3d} - batch {:6d} - loss {:7.4f} - valid acc {:7.4f} - {:4.1f} secs'.format(
             epoch_id, batch_count, results['epoch_avg_loss'], results['accuracy'], timer()-start
         ))
+        X, data = np.array([epoch_id]), np.array([results['epoch_avg_loss']])
+        visualise_plot(visualiser, X, data, title='Epoch avg loss', iteration=0, update='append')
+        data = np.array([results['accuracy']])
+        visualise_plot(visualiser, X, data, title='Accuracy', iteration=1, update='append')
+        visualise_image(visualiser, results['images'], title='Source image', iteration=0)
+        visualise_image(visualiser, results['target'], title='Target image', iteration=1)
+        visualise_image(visualiser, results['segmented'], title='Segmented image', iteration=2)
 
         if early_stopper.new_best and save_dir:
             model.save(os.path.join(save_dir, '{}.pth'.format(model.name)))
