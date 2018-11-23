@@ -1,4 +1,4 @@
-.PHONY: all clean local clear-models segnet
+.PHONY: all clean local segnet
 
 # to run in local repository
 local=false
@@ -11,34 +11,17 @@ MODEL_DIR=./models
 endif
 
 # hack for pointing to files
-data/processed/processed.pkl=$(DATA_DIR)/processed/processed.pkl
-data/raw/data_info.txt=$(DATA_DIR)/raw/data_info.txt
 data/videos/download.info=$(DATA_DIR)/videos/download.info
-data/raw/raw_real.hdf5=$(DATA_DIR)/raw/raw_real.hdf5
+data/hdf5/real.hdf5=$(DATA_DIR)/hdf5/real.hdf5
+data/videos/real.hdf5=$(DATA_DIR)/videos/real.hdf5
 models/segnet.pth=$(MODEL_DIR)/segnet.pth
 
 
-all: data/raw/data_info.txt
+all: models/segnet.pth
 
-clean: clear-models
-	rm -f $(DATA_DIR)/processed/*.pkl
-	rm -f $(DATA_DIR)/raw/data_info.txt
-
-clear-models:
+clean:
 	rm -f $(MODEL_DIR)/*.pth
-
-data/raw/data_info.txt: $(data/raw/data_info.txt)
-$(data/raw/data_info.txt):
-	python src/data/explore.py $(DATA_DIR)/raw/raw_real.hdf5 $(DATA_DIR)/raw/data_info.txt
-	python src/data/explore.py $(DATA_DIR)/raw/raw_sim.npy $(DATA_DIR)/raw/data_info.txt
-	python src/data/explore.py $(DATA_DIR)/raw/classes.npy $(DATA_DIR)/raw/data_info.txt
-
-# pre-process data to TensorDataset
-data/processed/processed.pkl:$(data/processed/processed.pkl)
-$(data/processed/processed.pkl): $(data/raw/data_info.txt)
-	python src/data/preprocess.py \
-	$(DATA_DIR)/raw/raw_real.hdf5 $(DATA_DIR)/raw/raw_sim.npy $(DATA_DIR)/raw/classes.npy \
-	$(DATA_DIR)/processed/processed.pkl
+	rm -f $(DATA_DIR)/hdf5/data_info.txt
 
 # download videos
 data/videos/download.info:$(data/videos/download.info)
@@ -49,19 +32,26 @@ $(data/videos/download.info):
 	$(DATA_DIR)/videos
 
 # extract frames
-data/raw/raw_real.hdf5:$(data/raw/raw_real.hdf5)
-$(data/raw/raw_real.hdf5): $(data/videos/download.info)
-	python src/data/extract_frames.py $(DATA_DIR)/videos $(DATA_DIR)/raw/raw_real.hdf5 \
+data/videos/real.hdf5:$(data/videos/real.hdf5)
+$(data/videos/real.hdf5): $(data/videos/download.info)
+	python src/data/extract_frames.py $(DATA_DIR)/videos $(DATA_DIR)/hdf5/real.hdf5 \
 	--frame-skip 10
+
+# split train/valid (ONLY LOCAL)
+data/hdf5/real.hdf5:$(data/hdf5/real.hdf5)
+$(data/hdf5/real.hdf5): $(data/videos/real.hdf5)
+	python src/data/split.py
 
 # train and save
 models/segnet.pth:$(models/segnet.pth)
-$(models/segnet.pth): $(data/processed/processed.pkl)
-	python src/models/train.py $(DATA_DIR)/processed/processed.pkl \
+$(models/segnet.pth): $(data/hdf5/real.hdf5)
+	python src/models/train.py \
+	$(DATA_DIR)/hdf5/sim.hdf5 $(DATA_DIR)/hdf5/real.hdf5 $(DATA_DIR)/hdf5/classes.hdf5 \
 	--save-dir=$(MODEL_DIR) \
-	--model-name=segnet
+	--seg-model-name=segnet
 
 # train only (no save)
-segnet: processed/processed.pkl
-	python src/models/train.py $(DATA_DIR)/processed/processed.pkl \
-	--model-name=segnet
+segnet: $(data/hdf5/real.hdf5)
+	python src/models/train.py \
+	$(DATA_DIR)/hdf5/sim.hdf5 $(DATA_DIR)/hdf5/real.hdf5 $(DATA_DIR)/hdf5/classes.hdf5 \
+	--seg-model-name=segnet

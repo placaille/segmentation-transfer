@@ -1,44 +1,37 @@
 import click
 import torch
 import math
-import pickle as pkl
 import numpy as np
 
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
+from data.dataset import Hdf5TorchDatasetWithLabels, Hdf5TorchDatasetWithoutLabels
 
 
-def tensor_dataset_to_cuda(tensor_dataset, device):
-    inputs = tensor_dataset.tensors[0].to(device)
-    labels = tensor_dataset.tensors[1].to(device)
-    return TensorDataset(inputs, labels)
+class Hdf5DataProvider(object):
+    def __init__(self, input_hdf5_path, batch_size, num_classes, label_hdf5_path=None):
+        """
+        DataProvider to create train/valid/test iterators
+        Arguments:
+            input_hdf5_path (str): path to hdf5 with 'train' and 'valid' datasets
+            batch_size  (int)
+            num_classes (int)
+            label_hdf5_path (str): default None
+        """
+        if label_hdf5_path is None:
+            train_dataset = Hdf5TorchDatasetWithoutLabels(input_hdf5_path, 'train')
+            valid_dataset = Hdf5TorchDatasetWithoutLabels(input_hdf5_path, 'valid')
+        else:
+            train_dataset = Hdf5TorchDatasetWithLabels(input_hdf5_path, label_hdf5_path, 'train')
+            valid_dataset = Hdf5TorchDatasetWithLabels(input_hdf5_path, label_hdf5_path, 'valid')
 
+        self.num_train = len(train_dataset)
+        self.num_valid = len(valid_dataset)
+        self.num_classes = num_classes
 
-class DataProvider(object):
-    """
-    DataProvider to create train/valid/test iterators
-    Arguments:
-        dataset_file (str): Path to preprocessed TensorDataset (train,valid,test)
-        batch_size (int): Batch size
-    """
-    def __init__(self, dataset_file, batch_size, device):
-
-        with open(dataset_file, 'rb') as file:
-            train, valid, test = pkl.load(file)
-
-        # load on gpu if applicable
-        train = tensor_dataset_to_cuda(train, device)
-        valid = tensor_dataset_to_cuda(valid, device)
-        test = tensor_dataset_to_cuda(test, device)
-
-        self.num_train = len(train)
-        self.num_valid = len(valid)
-        self.num_test = len(test)
-
-        self.num_classes = train.tensors[1].max().item() + 1
-        self.num_pixels = np.prod(train.tensors[0].shape[1:])
-        self.input_channels, self.input_width, self.input_height = train.tensors[0].shape[1:]
+        # input data in hfg5 is (N, 120, 160, 3)
+        self.num_pixels = np.prod(train_dataset.input_data.shape[1:])
+        self.input_channels = train_dataset.input_data.shape[-1]
         self.iters_per_epoch = math.ceil(self.num_train / batch_size)
 
-        self.train_iterator = DataLoader(train, batch_size, shuffle=True)
-        self.valid_iterator = DataLoader(valid, batch_size)
-        self.test_iterator = DataLoader(test, batch_size)
+        self.train_iterator = DataLoader(train_dataset, batch_size, shuffle=True)
+        self.valid_iterator = DataLoader(valid_dataset, batch_size)
