@@ -3,6 +3,7 @@ import h5py
 
 class H5PYDataset(torch.utils.data.Dataset):
     def __init__(self, dataset, classes, transform=None):
+        super(H5PYDataset, self).__init__()
         self.tensor = dataset
         self.classes = classes
 
