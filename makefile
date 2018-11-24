@@ -37,7 +37,7 @@ $(data/videos/real.hdf5): $(data/videos/download.info)
 	python src/data/extract_frames.py $(DATA_DIR)/videos $(DATA_DIR)/hdf5/real.hdf5 \
 	--frame-skip 10
 
-# split train/valid (ONLY LOCAL)
+# split train/valid (ONLY REMOTE)
 data/hdf5/real.hdf5:$(data/hdf5/real.hdf5)
 $(data/hdf5/real.hdf5): $(data/videos/real.hdf5)
 	python src/data/split.py
