@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 
-def evaluate(model, data_iterator):
+def evaluate(model, data_iterator, device):
 
   # evaluation
   model.eval()
@@ -10,11 +10,11 @@ def evaluate(model, data_iterator):
   total = 0
   outputs = dict()
   for images, labels in data_iterator:
-    logits = model(images)
+    logits = model(images.to(device))
 
     preds = torch.argmax(logits, dim=1)
 
-    count += torch.sum(labels == preds)
+    count += torch.sum(labels.to(device) == preds)
     total += labels.nelement()
 
   # compute accuracy

@@ -27,8 +27,8 @@ class Hdf5TorchDatasetWithLabels(torch_data.Dataset):
         self.label_data = label_file[dataset_name]
 
     def __getitem__(self, index):
-        input = torch.from_numpy(self.input_data[index]).float()
-        label = torch.from_numpy(self.label_data[index]).int()
+        input = torch.FloatTensor(self.input_data[index])
+        label = torch.LongTensor(self.label_data[index])
         return self.transform_input(input), label
 
     def __len__(self):
@@ -44,7 +44,7 @@ class Hdf5TorchDatasetWithoutLabels(torch_data.Dataset):
         self.input_data = input_file[dataset_name]
 
     def __getitem__(self, index):
-        input = torch.from_numpy(self.input_data[index]).float()
+        input = torch.FloatTensor(self.input_data[index])
         return self.transform_input(input)
 
     def __len__(self):
