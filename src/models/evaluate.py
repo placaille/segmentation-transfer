@@ -19,10 +19,14 @@ def evaluate(model, data_iterator, device):
     total += labels.nelement()
 
   images, labels = iter(data_iterator).next()
-  logits = model(images)
-  outputs['image'] = images
-  outputs['target'] = logit_to_img(labels)
-  outputs['segmented'] = logit_to_img(logits)
+  labels = labels.to('cpu').numpy()
+  logits = model(images.to(device))
+
+  outputs['images'] = images
+  outputs['targets'] = logit_to_img(labels).transpose(0, 3, 1, 2)
+
+  classes = logits.to('cpu').detach().numpy().argmax(1)
+  outputs['segmented'] = logit_to_img(classes).transpose(0, 3, 1, 2)
 
   # compute accuracy
   with np.errstate(divide='ignore', invalid='ignore'):
