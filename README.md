@@ -22,7 +22,7 @@ conda env create -f environment.yml
 
 # Data
 
-Data files `classes.hdf5`, `raw_sim.hdf5` and `raw_real.hdf5` must be placed in `data/raw`
+Data files `classes.hdf5`, `sim.hdf5` and `real.hdf5` must be placed in `hdf5`
 
 ## Real Duckiebot images
 
@@ -36,10 +36,10 @@ A list of videos used is listed in the file [`data/videos/list_of_videos.txt`](d
 
 #### Extracting frames
 
-Frames were extracted from the raw videos from the logs and downsampled from 640x480 to 160x120. Extracting every 10 frames of the downloaded videos provided a dataset of XXX images.
+Frames were extracted from the raw videos from the logs and downsampled from 640x480 to 160x120. Extracting every 10 frames of the downloaded videos provided a dataset of 11419 images.
 
 To extract the frames from the set of downloaded videos, simply use the following command.
 
 ```
-make data/raw/raw_real.hdf5
+make data/videos/real.hdf5
 ```

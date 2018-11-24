@@ -38,7 +38,6 @@ def main(data_sim, data_real, data_label, save_dir, batch_size, config_file,
     print('Loading data..')
     num_classes = 4
     real_data_provider = Hdf5DataProvider(data_real, batch_size, num_classes)
-    import pdb;pdb.set_trace()
     sim_data_provider = Hdf5DataProvider(data_sim, batch_size, num_classes, data_label)
 
     print('Building model & loading on GPU (if applicable)..')
@@ -73,7 +72,7 @@ def main(data_sim, data_real, data_label, save_dir, batch_size, config_file,
             epoch_loss += loss_seg.item()
 
         results['epoch_avg_loss'] = np.divide(epoch_loss, batch_id+1)
-        results.update(evaluate(seg_model, sim_data_provider.valid_iterator))
+        results.update(evaluate(seg_model, sim_data_provider.valid_iterator, device))
         early_stopper.update(results, epoch_id)
 
         print('epoch {:3d} - batch {:6d} - loss {:7.4f} - valid acc {:7.4f} - {:4.1f} secs'.format(

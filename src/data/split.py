@@ -1,25 +1,27 @@
 import h5py
+import numpy as np
 
 
-f1 = h5py.File('data/videos/real.hdf5')
-f2 = h5py.File('data/hdf5/real.hdf5', 'w')
+f1 = h5py.File('/data/lisa/data/duckietown-segmentation/data/videos/real.hdf5')
+f2 = h5py.File('/data/lisa/data/duckietown-segmentation/data/hdf5/real.hdf5', 'w')
 
-import pdb;pdb.set_trace()
 N = 11419
 Ntrain = int(N * 0.9)
 Nvalid = N - Ntrain
 
-d_train = f2.create_dataset('train', (Ntrain, 120, 160,3), dtype='int16')
-d_valid = f2.create_dataset('valid', (Nvalid, 120, 160,3), dtype='int16')
+all = np.arange(N)
+np.random.shuffle(all)
 
-for i in range(Ntrain):
-    if i % 1000 == 0:
-        print(i)
-    img = f1['raw_real'][i]
-    d_train[i] = img
+train_ids = all[:Ntrain]
+valid_ids = all[Ntrain:]
 
-for i in range(Ntrain, N):
-    if i % 1000 == 0:
-        print(i)
-    img = f1['raw_real'][i]
-    d_valid[i - Ntrain] = img
+d_train = f2.create_dataset('train', (Ntrain, 120, 160, 3), dtype='int16')
+d_valid = f2.create_dataset('valid', (Nvalid, 120, 160, 3), dtype='int16')
+
+for pos, idx in enumerate(train_ids):
+    img = f1['raw_real'][idx]
+    d_train[pos] = img
+
+for pos, idx in enumerate(valid_ids):
+    img = f1['raw_real'][idx]
+    d_valid[pos] = img
