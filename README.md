@@ -16,7 +16,7 @@ The default is to point to the Mila file system for data and models. See [the ma
 The code can run on tiny versions of the datasets using the following command.
 
 ```
-make segnet-tiny
+make tiny-segnet
 ```
 
  See [the makefile](makefile) for more info. Please be aware the tiny versions of the dataset can be made using [this file](src/data/tiny_dataset.py).
