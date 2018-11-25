@@ -10,6 +10,40 @@ The above will run with the local subdirectories as reference.
 
 The default is to point to the Mila file system for data and models. See [the makefile](makefile) for more info.
 
+## Visualisation
+
+It is possible, but no necessary, to monitor the training using Visdom. In order to use Visdom, as server must be running a priori.
+
+### Launching a server
+The instructions to launch a server are well documented [here](https://github.com/facebookresearch/visdom#usage)
+
+Launching a Visdom server on the MILA cluster is a bit more involved. A script is provided in `./scripts/start_visdom.sh`
+You need to define a $PORT that you are the only one using and choose a machine acting as $SERVER.
+
+#### Step 1
+On your local machine, add the following to the file `~/.ssh/config`
+```
+Host elisa1.iro.umontreal.ca
+User $MILAUSER
+LocalForward $PORT 127.0.0.1:$PORT
+```
+
+#### Step 2
+ssh to elisa1.
+
+#### Step 3
+Launch the provided script on a $SERVER.
+```
+sbatch -w $SERVER --mem=8000 ./scripts/start_visdom.sh $PORT
+```
+
+#### Step 4
+Enjoy your visdom server in the browser at the address `http://localhost:$PORT`. 
+Fineprint: You have to be connected throught ssh on elisa1 in order see your visdom server on your local machine.
+
+### Using the server
+Now that you have a server running, you may want to use it in your training script.
+To do so, add the following options when launching the training script: `--server http://$SERVER`, `--port $PORT`
 
 ## Tiny dataset
 
