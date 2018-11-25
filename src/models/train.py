@@ -71,14 +71,17 @@ def main(data_sim, data_real, data_label, save_dir, batch_size, config_file,
             optimizer.step()
 
             epoch_loss += loss_seg.item()
+            X, data = np.array([batch_count]), np.array([loss_seg]])
+            vis.visualise_plot(visualiser, X, data, title='Loss per batch', legend=['Loss'], iteration=2, update='append')
 
-            results['epoch_avg_loss'] = np.divide(epoch_loss, batch_id+1)
-            results.update(evaluate(seg_model, sim_data_provider.valid_iterator, device))
-            early_stopper.update(results, epoch_id)
+        results['epoch_avg_loss'] = np.divide(epoch_loss, batch_id+1)
+        results.update(evaluate(seg_model, sim_data_provider.valid_iterator, device))
+        early_stopper.update(results, epoch_id)
 
-            print('epoch {:3d} - batch {:6d} - loss {:7.4f} - valid acc {:7.4f} - {:4.1f} secs'.format(
-                epoch_id, batch_count, results['epoch_avg_loss'], results['accuracy'], timer()-start
-            ))
+        print('epoch {:3d} - batch {:6d} - loss {:7.4f} - valid acc {:7.4f} - {:4.1f} secs'.format(
+            epoch_id, batch_count, results['epoch_avg_loss'], results['accuracy'], timer()-start
+        ))
+
         X, data = np.array([epoch_id]), np.array([results['epoch_avg_loss']])
         vis.visualise_plot(visualiser, X, data, title='Epoch avg loss', legend=['Loss'], iteration=0, update='append')
         data = np.array([results['accuracy']])
