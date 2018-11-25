@@ -3,3 +3,4 @@
 .ftpconfig
 /data/
 /models/
+*.out

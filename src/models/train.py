@@ -10,6 +10,7 @@ sys.path.append('src')
 from torch import nn, optim
 from data import Hdf5DataProvider
 from utils import CommandWithConfigFile, EarlyStopper
+from utils import vis
 from evaluate import evaluate
 from itertools import count
 from timeit import default_timer as timer
@@ -29,8 +30,10 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
               'segnet',
               ]), help='Name of model architecture (default segnet)')
 @click.option('--early-stop-patience', type=int, default=10)
+@click.option('--server', type=str, default='http://localhost')
+@click.option('--port', type=str, default='8067')
 def main(data_sim, data_real, data_label, save_dir, batch_size, config_file,
-         seg_model_name, early_stop_patience):
+         seg_model_name, early_stop_patience, server, port):
 
     print('Loading data..')
     num_classes = 4
@@ -49,6 +52,7 @@ def main(data_sim, data_real, data_label, save_dir, batch_size, config_file,
     batch_count = 0
     results = dict()
     early_stopper = EarlyStopper('accuracy', early_stop_patience)
+    visualiser = vis.setup(server, port, seg_model_name)
 
     print('Starting training..')
     for epoch_id in count(start=1):
@@ -68,13 +72,20 @@ def main(data_sim, data_real, data_label, save_dir, batch_size, config_file,
 
             epoch_loss += loss_seg.item()
 
-        results['epoch_avg_loss'] = np.divide(epoch_loss, batch_id+1)
-        results.update(evaluate(seg_model, sim_data_provider.valid_iterator, device))
-        early_stopper.update(results, epoch_id)
+            results['epoch_avg_loss'] = np.divide(epoch_loss, batch_id+1)
+            results.update(evaluate(seg_model, sim_data_provider.valid_iterator, device))
+            early_stopper.update(results, epoch_id)
 
-        print('Epoch {:3d} - Batch {:6d} - loss {:7.4f} - valid acc {:7.4f} - {:4.1f} secs'.format(
-            epoch_id, batch_count, results['epoch_avg_loss'], results['accuracy'], timer()-start
-        ))
+            print('epoch {:3d} - batch {:6d} - loss {:7.4f} - valid acc {:7.4f} - {:4.1f} secs'.format(
+                epoch_id, batch_count, results['epoch_avg_loss'], results['accuracy'], timer()-start
+            ))
+        X, data = np.array([epoch_id]), np.array([results['epoch_avg_loss']])
+        vis.visualise_plot(visualiser, X, data, title='Epoch avg loss', legend=['Loss'], iteration=0, update='append')
+        data = np.array([results['accuracy']])
+        vis.visualise_plot(visualiser, X, data, title='Accuracy', legend=['Accuracy'], iteration=1, update='append')
+        vis.visualise_image(visualiser, results['images'], title='Source image', iteration=0)
+        vis.visualise_image(visualiser, results['targets'], title='Target image', iteration=1)
+        vis.visualise_image(visualiser, results['segmented'], title='Segmented image', iteration=2)
 
         if early_stopper.new_best and save_dir:
             seg_model.save(os.path.join(save_dir, '{}.pth'.format(seg_model.name)))
