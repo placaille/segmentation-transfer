@@ -1,14 +1,19 @@
 .PHONY: all clean segnet tiny-segnet
 
-# to run in local repository
+# default args
 local=false
+run_name=default
+server=''
+port=''
+
+# to run in local repository
 ifeq ($(local), false)
 DATA_DIR=/data/lisa/data/duckietown-segmentation/data
-MODEL_DIR=/data/milatmp1/$(USER)/duckietown-segmentation/models
+MODEL_DIR=/data/milatmp1/$(USER)/duckietown-segmentation/models/$(run_name)
 TMP_DATA_DIR=/Tmp/$(USER)/segmentation-transfer/data
 else
 DATA_DIR=./data
-MODEL_DIR=./models
+MODEL_DIR=./models/$(run_name)
 TMP_DATA_DIR=/tmp/segmentation-transfer/data
 endif
 
@@ -80,10 +85,13 @@ $(tmp/data/hdf5_tiny/.sentinel): $(data/hdf5_tiny/.sentinel)
 # train and save
 models/segnet.pth:$(models/segnet.pth)
 $(models/segnet.pth): $(tmp/data/hdf5/.sentinel)
+	mkdir -p $(MODEL_DIR)
 	python src/models/train.py \
 	$(TMP_DATA_DIR)/hdf5/sim.hdf5 \
 	$(TMP_DATA_DIR)/hdf5/real.hdf5 \
 	$(TMP_DATA_DIR)/hdf5/classes.hdf5 \
+	--server=$(server) \
+	--port=$(port) \
 	--save-dir=$(MODEL_DIR) \
 	--seg-model-name=segnet
 
@@ -93,6 +101,8 @@ segnet: $(tmp/data/hdf5/.sentinel)
 	$(TMP_DATA_DIR)/hdf5/sim.hdf5 \
 	$(TMP_DATA_DIR)/hdf5/real.hdf5 \
 	$(TMP_DATA_DIR)/hdf5/classes.hdf5 \
+	--server=$(server) \
+	--port=$(port) \
 	--seg-model-name=segnet
 
 # train only (no save)
@@ -101,4 +111,6 @@ tiny-segnet: $(tmp/data/hdf5_tiny/.sentinel)
 	$(TMP_DATA_DIR)/hdf5_tiny/sim_tiny.hdf5 \
 	$(TMP_DATA_DIR)/hdf5_tiny/real_tiny.hdf5 \
 	$(TMP_DATA_DIR)/hdf5_tiny/classes_tiny.hdf5 \
+	--server=$(server) \
+	--port=$(port) \
 	--seg-model-name=segnet
