@@ -1,4 +1,4 @@
-import click
+±import click
 import sys
 import torch
 import os
@@ -31,13 +31,18 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 @click.option('--seg-model-name', default='segnet', type=click.Choice([
               'segnet', 'segnet_strided_upsample'
               ]), help='Name of model architecture (default segnet)')
+@click.option('--discr-model-name', default='dcgan_discr', help='Name of discriminator model (default dcgan_discr)',
+            type=click.Choice(['dcgan_discr']))
+@click.option('--gen-model-name', default='style_transfer_gen', help='Name of generator model (default style_transfer_gen)',
+            type=click.Choice(['style_transfer_gen']))
 @click.option('--early-stop-patience', type=int, default=10)
 @click.option('--server', type=str, default=None)
 @click.option('--port', type=str, default=None)
 @click.option('--reload', is_flag=True,
                help='Flag notifying that the experiment is being reloaded.')
-def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batch_size, config_file,
-         seg_model_name, early_stop_patience, server, port, reload, run_name):
+def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batch_size,
+         config_file, seg_model_name, discr_model_name, gen_model_name, early_stop_patience,
+         server, port, reload, run_name):
 
     print('Loading data..')
     num_classes = 4
@@ -59,15 +64,23 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
     )
 
     print('Building model & loading on GPU (if applicable)..')
-    seg_model = models.get_seg_model(seg_model_name, num_classes, input_channels).to(device)
+    model_seg = models.get_seg_model(seg_model_name, num_classes, input_channels).to(device)
+    model_gen = models.get_generator_model(gen_model_name, real_data_provider).to(device)
+    model_discr = models.get_discriminator_model(discr_model_name, sim_data_provider).to(device)
     if save_dir:
-        seg_model.save(os.path.join(save_dir, '{}.pth'.format(seg_model.name)))
+        model_seg.save(os.path.join(save_dir, '{}.pth'.format(model_seg.name)))
+        model_gen.save(os.path.join(save_dir, '{}.pth'.format(model_gen.name)))
+        model_discr.save(os.path.join(save_dir, '{}.pth'.format(model_discr.name)))
 
     # adjusted class weights [black, white, red, yellow] see README.md
     class_weights = torch.tensor([0.0051, 0.0551, 0.6538, 0.2860]).to(device)
 
-    loss = nn.CrossEntropyLoss(weight=class_weights)
-    optimizer = optim.Adam(seg_model.parameters())
+    obj_ce = nn.CrossEntropyLoss(weight=class_weights)
+    obj_adv = nn.BCELoss()
+
+    optim_seg = optim.Adam(model_seg.parameters())
+    optim_gen = optim.Adam(model_gen.parameters())
+    optim_discr = optim.Adam(model_discr.parameters())
 
     print('Initializing misc..')
     batch_count = 0
@@ -92,10 +105,10 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
                 batch_per_part += 1
 
                 input, labels = batch
-                logits = seg_model(input.to(device))
+                logits = model_seg(input.to(device))
 
                 optimizer.zero_grad()
-                loss_seg = loss(
+                loss_seg = obj_ce(
                     logits.permute(0, 2, 3, 1).contiguous().view(-1, num_classes),
                     labels.view(-1).to(device)
                 )
@@ -112,12 +125,12 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
             torch.cuda.empty_cache()
 
             results['partition_avg_loss'] = np.divide(partition_loss, batch_per_part)
-            results.update(evaluate(seg_model, sim_data, device))
+            results.update(evaluate(model_seg, sim_data, device))
             early_stopper.update(results, epoch_id, batch_count)
             log_and_viz_results(results, epoch_id, batch_count, partition_count, visualiser, start)
 
             if early_stopper.new_best and save_dir:
-                seg_model.save(os.path.join(save_dir, '{}.pth'.format(seg_model.name)))
+                model_seg.save(os.path.join(save_dir, '{}.pth'.format(seg_model.name)))
 
             if early_stopper.stop:
                 early_stopper.print_stop()

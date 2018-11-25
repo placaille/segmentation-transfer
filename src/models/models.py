@@ -16,6 +16,24 @@ def get_seg_model(model_name, num_classes, input_channels):
     return model
 
 
+def get_generator_model(model_name, data_provider):
+    if model_name == 'style_transfer_gen':
+        model = TransformerNet(data_provider.input_channels)
+    else:
+        raise ValueError('{} not a valid model name'.format(model_name))
+    model.name = model_name
+    return model
+
+
+def get_discriminator_model(model_name, data_provider):
+    if model_name == 'dcgan_discr':
+        model = DCGANDiscriminator(data_provider.input_channels)
+    else:
+        raise ValueError('{} not a valid model name'.format(model_name))
+    model.name = model_name
+    return model
+
+
 class Flatten(nn.Module):
     def forward(self, input):
         return input.view(input.size(0), -1)
@@ -313,6 +331,162 @@ class SegNet(nn.Module):
 
         # out (b, num_classes, 120, 160)
         return self.smooth_conv(x11d)
+
+    def save(self, fname):
+        torch.save(self.state_dict(), fname)
+
+    def load(self, fname):
+        self.load_state_dict(torch.load(fname))
+
+
+class TransformerNet(torch.nn.Module):
+    """
+    TransformerNet
+    https://github.com/pytorch/examples/blob/master/fast_neural_style/neural_style/transformer_net.py
+    """
+    def __init__(self, input_channels):
+        super(TransformerNet, self).__init__()
+
+        # Initial convolution layers
+        self.conv1 = ConvLayer(input_channels, 32, kernel_size=9, stride=1)
+        self.in1 = torch.nn.InstanceNorm2d(32, affine=True)
+        self.conv2 = ConvLayer(32, 64, kernel_size=3, stride=2)
+        self.in2 = torch.nn.InstanceNorm2d(64, affine=True)
+        self.conv3 = ConvLayer(64, 128, kernel_size=3, stride=2)
+        self.in3 = torch.nn.InstanceNorm2d(128, affine=True)
+        # Residual layers
+        self.res1 = ResidualBlock(128)
+        self.res2 = ResidualBlock(128)
+        self.res3 = ResidualBlock(128)
+        self.res4 = ResidualBlock(128)
+        self.res5 = ResidualBlock(128)
+        # Upsampling Layers
+        self.deconv1 = UpsampleConvLayer(128, 64, kernel_size=3, stride=1, upsample=2)
+        self.in4 = torch.nn.InstanceNorm2d(64, affine=True)
+        self.deconv2 = UpsampleConvLayer(64, 32, kernel_size=3, stride=1, upsample=2)
+        self.in5 = torch.nn.InstanceNorm2d(32, affine=True)
+        self.deconv3 = ConvLayer(32, 3, kernel_size=9, stride=1)
+        # Non-linearities
+        self.relu = torch.nn.ReLU()
+
+    def forward(self, X):
+        y = self.relu(self.in1(self.conv1(X)))
+        y = self.relu(self.in2(self.conv2(y)))
+        y = self.relu(self.in3(self.conv3(y)))
+        y = self.res1(y)
+        y = self.res2(y)
+        y = self.res3(y)
+        y = self.res4(y)
+        y = self.res5(y)
+        y = self.relu(self.in4(self.deconv1(y)))
+        y = self.relu(self.in5(self.deconv2(y)))
+        y = self.deconv3(y)
+        return y
+
+    def save(self, fname):
+        torch.save(self.state_dict(), fname)
+
+    def load(self, fname):
+        self.load_state_dict(torch.load(fname))
+
+
+class ConvLayer(torch.nn.Module):
+    """
+    https://github.com/pytorch/examples/blob/master/fast_neural_style/neural_style/transformer_net.py
+    """
+    def __init__(self, in_channels, out_channels, kernel_size, stride):
+        super(ConvLayer, self).__init__()
+        reflection_padding = kernel_size // 2
+        self.reflection_pad = torch.nn.ReflectionPad2d(reflection_padding)
+        self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
+
+    def forward(self, x):
+        out = self.reflection_pad(x)
+        out = self.conv2d(out)
+        return out
+
+
+class ResidualBlock(torch.nn.Module):
+    """ResidualBlock
+    introduced in: https://arxiv.org/abs/1512.03385
+    recommended architecture: http://torch.ch/blog/2016/02/04/resnets.html
+    """
+
+    def __init__(self, channels):
+        super(ResidualBlock, self).__init__()
+        self.conv1 = ConvLayer(channels, channels, kernel_size=3, stride=1)
+        self.in1 = torch.nn.InstanceNorm2d(channels, affine=True)
+        self.conv2 = ConvLayer(channels, channels, kernel_size=3, stride=1)
+        self.in2 = torch.nn.InstanceNorm2d(channels, affine=True)
+        self.relu = torch.nn.ReLU()
+
+    def forward(self, x):
+        residual = x
+        out = self.relu(self.in1(self.conv1(x)))
+        out = self.in2(self.conv2(out))
+        out = out + residual
+        return out
+
+
+class UpsampleConvLayer(torch.nn.Module):
+    """UpsampleConvLayer
+    Upsamples the input and then does a convolution. This method gives better results
+    compared to ConvTranspose2d.
+    ref: http://distill.pub/2016/deconv-checkerboard/
+    """
+
+    def __init__(self, in_channels, out_channels, kernel_size, stride, upsample=None):
+        super(UpsampleConvLayer, self).__init__()
+        self.upsample = upsample
+        reflection_padding = kernel_size // 2
+        self.reflection_pad = torch.nn.ReflectionPad2d(reflection_padding)
+        self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
+
+    def forward(self, x):
+        x_in = x
+        if self.upsample:
+            x_in = torch.nn.functional.interpolate(x_in, mode='nearest', scale_factor=self.upsample)
+        out = self.reflection_pad(x_in)
+        out = self.conv2d(out)
+        return out
+
+
+class DCGANDiscriminator(nn.Module):
+    """
+    DCGAN
+    https://github.com/eriklindernoren/PyTorch-GAN/blob/master/implementations/dcgan/dcgan.py
+    """
+    def __init__(self, input_channels):
+        super(DCGANDiscriminator, self).__init__()
+
+        def discriminator_block(in_filters, out_filters, bn=True):
+            block = [   nn.Conv2d(in_filters, out_filters, 3, 2, 1),
+                        nn.LeakyReLU(0.2, inplace=True),
+                        nn.Dropout2d(0.25)]
+            if bn:
+                block.append(nn.BatchNorm2d(out_filters, 0.8))
+            return block
+
+        self.model = nn.Sequential(
+            *discriminator_block(input_channels, 16, bn=False),
+            *discriminator_block(16, 32),
+            *discriminator_block(32, 64),
+            *discriminator_block(64, 128),  # out (b, 128, 8, 10) for 120x160
+        )
+
+        # The height and width of downsampled image
+        flat_size = 128*8*10
+        self.adv_layer = nn.Sequential(
+            nn.Linear(flat_size, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, img):
+        out = self.model(img)
+        out = out.view(out.shape[0], -1)
+        validity = self.adv_layer(out)
+
+        return validity
 
     def save(self, fname):
         torch.save(self.state_dict(), fname)
