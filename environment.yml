@@ -14,3 +14,4 @@ dependencies:
     - opencv-python
     - h5py
     - requests
+    - visdom
