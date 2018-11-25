@@ -17,8 +17,10 @@ def CommandWithConfigFile(config_file_param_name):
             if config_file is not None:
                 with open(config_file) as f:
                     config_data = yaml.load(f)
-                    for param, value in ctx.params.items():
-                        if value is None and param in config_data:
+                if config_data is not None:
+                    assert type(config_data) is dict
+                    for param, value in config_data.items():
+                        if param in ctx.params.keys():
                             ctx.params[param] = config_data[param]
 
             return super(CustomCommandClass, self).invoke(ctx)

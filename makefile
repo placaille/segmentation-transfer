@@ -3,8 +3,7 @@
 # default args
 local=false
 run_name=default
-server=''
-port=''
+config_file=template_config.yml
 
 # to run in local repository
 ifeq ($(local), false)
@@ -90,9 +89,8 @@ $(models/segnet.pth): $(tmp/data/hdf5/.sentinel)
 	$(TMP_DATA_DIR)/hdf5/sim.hdf5 \
 	$(TMP_DATA_DIR)/hdf5/real.hdf5 \
 	$(TMP_DATA_DIR)/hdf5/classes.hdf5 \
-	--server=$(server) \
-	--port=$(port) \
 	--save-dir=$(MODEL_DIR) \
+	--config-file=$(config_file) \
 	--seg-model-name=segnet
 
 # train only (no save)
@@ -101,8 +99,7 @@ segnet: $(tmp/data/hdf5/.sentinel)
 	$(TMP_DATA_DIR)/hdf5/sim.hdf5 \
 	$(TMP_DATA_DIR)/hdf5/real.hdf5 \
 	$(TMP_DATA_DIR)/hdf5/classes.hdf5 \
-	--server=$(server) \
-	--port=$(port) \
+	--config-file=$(config_file) \
 	--seg-model-name=segnet
 
 # train only (no save)
@@ -111,6 +108,5 @@ tiny-segnet: $(tmp/data/hdf5_tiny/.sentinel)
 	$(TMP_DATA_DIR)/hdf5_tiny/sim_tiny.hdf5 \
 	$(TMP_DATA_DIR)/hdf5_tiny/real_tiny.hdf5 \
 	$(TMP_DATA_DIR)/hdf5_tiny/classes_tiny.hdf5 \
-	--server=$(server) \
-	--port=$(port) \
+	--config-file=$(config_file) \
 	--seg-model-name=segnet
