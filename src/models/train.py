@@ -24,16 +24,19 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 @click.argument('data-real', type=click.Path(exists=True, dir_okay=False))
 @click.argument('data-label', type=click.Path(exists=True, dir_okay=False))
 @click.option('--save-dir', type=click.Path(writable=True, file_okay=False))
+@click.option('--visdom-dir', type=click.Path(writable=True, file_okay=False))
 @click.option('--config-file', type=click.Path(exists=True, dir_okay=False))
 @click.option('--batch-size', type=int, default=32, help='(default 32)')
 @click.option('--seg-model-name', default='segnet', type=click.Choice([
               'segnet',
               ]), help='Name of model architecture (default segnet)')
 @click.option('--early-stop-patience', type=int, default=10)
-@click.option('--server', type=str, default='http://localhost')
-@click.option('--port', type=str, default='8067')
-def main(data_sim, data_real, data_label, save_dir, batch_size, config_file,
-         seg_model_name, early_stop_patience, server, port):
+@click.option('--server', type=str, default=None)
+@click.option('--port', type=str, default=None)
+@click.option('--reload', is_flag=True,
+               help='Flag notifying that the experiment is being reloaded.')
+def main(data_sim, data_real, data_label, save_dir, visdom_dir, batch_size, config_file,
+         seg_model_name, early_stop_patience, server, port, reload):
 
     print('Loading data..')
     num_classes = 4
@@ -52,7 +55,7 @@ def main(data_sim, data_real, data_label, save_dir, batch_size, config_file,
     batch_count = 0
     results = dict()
     early_stopper = EarlyStopper('accuracy', early_stop_patience)
-    visualiser = vis.setup(server, port, seg_model_name)
+    visualiser = vis.Visualiser(server, port, seg_model_name, reload, visdom_dir)
 
     print('Starting training..')
     for epoch_id in count(start=1):
@@ -71,8 +74,8 @@ def main(data_sim, data_real, data_label, save_dir, batch_size, config_file,
             optimizer.step()
 
             epoch_loss += loss_seg.item()
-            X, data = np.array([batch_count]), np.array([loss_seg]])
-            vis.visualise_plot(visualiser, X, data, title='Loss per batch', legend=['Loss'], iteration=2, update='append')
+            X, data = np.array([batch_count]), np.array([loss_seg.detach().to('cpu').numpy()])
+            visualiser.plot(X, data, title='Loss per batch', legend=['Loss'], iteration=2, update='append')
 
         results['epoch_avg_loss'] = np.divide(epoch_loss, batch_id+1)
         results.update(evaluate(seg_model, sim_data_provider.valid_iterator, device))
@@ -83,12 +86,12 @@ def main(data_sim, data_real, data_label, save_dir, batch_size, config_file,
         ))
 
         X, data = np.array([epoch_id]), np.array([results['epoch_avg_loss']])
-        vis.visualise_plot(visualiser, X, data, title='Epoch avg loss', legend=['Loss'], iteration=0, update='append')
+        visualiser.plot(X, data, title='Epoch avg loss', legend=['Loss'], iteration=0, update='append')
         data = np.array([results['accuracy']])
-        vis.visualise_plot(visualiser, X, data, title='Accuracy', legend=['Accuracy'], iteration=1, update='append')
-        vis.visualise_image(visualiser, results['images'], title='Source image', iteration=0)
-        vis.visualise_image(visualiser, results['targets'], title='Target image', iteration=1)
-        vis.visualise_image(visualiser, results['segmented'], title='Segmented image', iteration=2)
+        visualiser.plot(X, data, title='Accuracy', legend=['Accuracy'], iteration=1, update='append')
+        visualiser.image(results['images'], title='Source image', iteration=0)
+        visualiser.image(results['targets'], title='Target image', iteration=1)
+        visualiser.image(results['segmented'], title='Segmented image', iteration=2)
 
         if early_stopper.new_best and save_dir:
             seg_model.save(os.path.join(save_dir, '{}.pth'.format(seg_model.name)))

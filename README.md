@@ -36,6 +36,7 @@ Launch the provided script on a $SERVER.
 ```
 sbatch -w $SERVER --mem=8000 ./scripts/start_visdom.sh $PORT
 ```
+Fineprint: You need to have visdom installed. You can add a line in the script that activate a conda environment that have visdom.
 
 #### Step 4
 Enjoy your visdom server in the browser at the address `http://localhost:$PORT`. 

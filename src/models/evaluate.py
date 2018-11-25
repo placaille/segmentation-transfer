@@ -22,7 +22,7 @@ def evaluate(model, data_iterator, device):
   labels = labels.to('cpu').numpy()
   logits = model(images.to(device))
 
-  outputs['images'] = images
+  outputs['images'] = images.to('cpu').numpy()
   outputs['targets'] = logit_to_img(labels).transpose(0, 3, 1, 2)
 
   classes = logits.to('cpu').detach().numpy().argmax(1)
