@@ -37,8 +37,8 @@ def main(data_sim, data_real, data_label, save_dir, batch_size, config_file,
 
     print('Loading data..')
     num_classes = 4
-    real_data_provider = Hdf5DataProvider(data_real, batch_size, num_classes)
-    sim_data_provider = Hdf5DataProvider(data_sim, batch_size, num_classes, data_label)
+    real_data_provider = Hdf5DataProvider(data_real, batch_size, num_classes, num_workers=2)
+    sim_data_provider = Hdf5DataProvider(data_sim, batch_size, num_classes, data_label, num_workers=2)
 
     print('Building model & loading on GPU (if applicable)..')
     seg_model = models.get_seg_model(seg_model_name, sim_data_provider).to(device)

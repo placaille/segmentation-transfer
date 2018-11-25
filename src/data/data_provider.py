@@ -8,7 +8,8 @@ from data.dataset import Hdf5TorchDatasetWithLabels, Hdf5TorchDatasetWithoutLabe
 
 
 class Hdf5DataProvider(object):
-    def __init__(self, input_hdf5_path, batch_size, num_classes, label_hdf5_path=None):
+    def __init__(self, input_hdf5_path, batch_size, num_classes, label_hdf5_path=None,
+                 num_workers=0):
         """
         DataProvider to create train/valid/test iterators
         Arguments:
@@ -33,5 +34,5 @@ class Hdf5DataProvider(object):
         self.input_channels = train_dataset.input_data.shape[-1]
         self.iters_per_epoch = math.ceil(self.num_train / batch_size)
 
-        self.train_iterator = DataLoader(train_dataset, batch_size, shuffle=True)
-        self.valid_iterator = DataLoader(valid_dataset, batch_size)
+        self.train_iterator = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=num_workers)
+        self.valid_iterator = DataLoader(valid_dataset, batch_size, num_workers=num_workers)
