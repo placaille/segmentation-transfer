@@ -35,6 +35,12 @@ conda env create -f environment.yml
 
 Data files `classes.hdf5`, `sim.hdf5` and `real.hdf5` must be placed in `hdf5`
 
+The distributions of the classes are the following
+```
+('Valid set: ', {black: 17157, white: 1596, red: 138, yellow: 307})
+('train set: ', {black: 17154, white: 1602, red: 137, yellow: 304})
+```
+
 ## Real Duckiebot images
 
 The database of logs can be found [here](http://ipfs.duckietown.org:8080/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/gallery.html). Files can be directly downloaded from [here](https://gateway.ipfs.io/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/) using the following command.
