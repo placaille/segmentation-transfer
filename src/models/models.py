@@ -247,6 +247,8 @@ class SegNet(nn.Module):
         self.bn12d = nn.BatchNorm2d(64, momentum=batchNorm_momentum)
         self.conv11d = nn.Conv2d(64, label_nbr, kernel_size=3, padding=1)
 
+        self.smooth_conv = nn.Conv2d(label_nbr, label_nbr, kernel_size=7, stride=1, padding=3)
+
     def forward(self, x):
         """Forward method."""
         # Stage 1
@@ -310,7 +312,7 @@ class SegNet(nn.Module):
         x11d = self.conv11d(x12d)
 
         # out (b, num_classes, 120, 160)
-        return x11d
+        return self.smooth_conv(x11d)
 
     def save(self, fname):
         torch.save(self.state_dict(), fname)

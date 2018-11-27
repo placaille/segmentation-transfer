@@ -64,7 +64,7 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
         seg_model.save(os.path.join(save_dir, '{}.pth'.format(seg_model.name)))
 
     # adjusted class weights [black, white, red, yellow] see README.md
-    class_weights = [0.0051, 0.0551, 0.6538, 0.2860]
+    class_weights = torch.tensor([0.0051, 0.0551, 0.6538, 0.2860]).to(device)
 
     loss = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.Adam(seg_model.parameters())
