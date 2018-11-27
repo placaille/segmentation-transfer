@@ -27,3 +27,11 @@ class EarlyStopper(object):
         else:
             self.patience_counter -= 1
             self.stop = True if self.patience_counter <=0 else False
+
+    def print_stop(self):
+        print('Stopping training due to lack of improvement..')
+        print('Best performing model:\t epoch {}, batch {} ({} {:7.4f})'.format(
+            early_stopper.best_epoch_id,
+            early_stopper.best_batch_id,
+            early_stopper.criteria,
+            early_stopper.best_value))

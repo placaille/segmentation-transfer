@@ -111,13 +111,8 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
                 seg_model.save(os.path.join(save_dir, '{}.pth'.format(seg_model.name)))
 
             if early_stopper.stop:
-                print('Stopping training due to lack of improvement..')
-                print('Best performing model:\t epoch {}, batch {} ({} {:7.4f})'.format(
-                    early_stopper.best_epoch_id,
-                    early_stopper.best_batch_id,
-                    early_stopper.criteria,
-                    early_stopper.best_value))
-                break
+                early_stopper.print_stop()
+                return
 
 
 def log_and_viz_results(results, epoch_id, batch_id, eval_count, visualiser, start):
