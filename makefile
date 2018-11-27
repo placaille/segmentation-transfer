@@ -87,6 +87,7 @@ $(models/segnet.pth): $(tmp/data/split/.sentinel)
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
 	$(TMP_DATA_DIR)/split/class \
+	--run-name=$(run_name) \
 	--save-dir=$(MODEL_DIR) \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet
@@ -97,6 +98,7 @@ segnet: $(tmp/data/split/.sentinel)
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
 	$(TMP_DATA_DIR)/split/class \
+	--run-name=$(run_name) \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet
 
@@ -108,6 +110,7 @@ $(models/segnet_strided_upsample.pth): $(tmp/data/split/.sentinel)
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
 	$(TMP_DATA_DIR)/split/class \
+	--run-name=$(run_name) \
 	--save-dir=$(MODEL_DIR) \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet_strided_upsample
@@ -118,6 +121,7 @@ segnet_strided_upsample: $(tmp/data/split/.sentinel)
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
 	$(TMP_DATA_DIR)/split/class \
+	--run-name=$(run_name) \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet_strided_upsample
 
@@ -127,5 +131,6 @@ tiny-segnet: $(tmp/data/split_tiny/.sentinel)
 	$(TMP_DATA_DIR)/split_tiny/sim \
 	$(TMP_DATA_DIR)/split_tiny/real \
 	$(TMP_DATA_DIR)/split_tiny/class \
+	--run-name=$(run_name) \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet

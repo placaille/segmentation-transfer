@@ -23,6 +23,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 @click.argument('data-sim-dir', type=click.Path(exists=True, file_okay=False))
 @click.argument('data-real-dir', type=click.Path(exists=True, file_okay=False))
 @click.argument('data-label-dir', type=click.Path(exists=True, file_okay=False))
+@click.option('--run-name', type=str)
 @click.option('--save-dir', type=click.Path(writable=True, file_okay=False))
 @click.option('--visdom-dir', type=click.Path(writable=True, file_okay=False))
 @click.option('--config-file', type=click.Path(exists=True, dir_okay=False))
@@ -36,7 +37,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 @click.option('--reload', is_flag=True,
                help='Flag notifying that the experiment is being reloaded.')
 def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batch_size, config_file,
-         seg_model_name, early_stop_patience, server, port, reload):
+         seg_model_name, early_stop_patience, server, port, reload, run_name):
 
     print('Loading data..')
     num_classes = 4
@@ -70,7 +71,7 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
     partition_count = 0
     results = dict()
     early_stopper = EarlyStopper('accuracy', early_stop_patience)
-    visualiser = vis.Visualiser(server, port, seg_model_name, reload, visdom_dir)
+    visualiser = vis.Visualiser(server, port, run_name, reload, visdom_dir)
 
     print('Starting training..')
     for epoch_id in count(start=1):
