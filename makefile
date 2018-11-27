@@ -1,4 +1,4 @@
-.PHONY: all clean segnet tiny-segnet
+.PHONY: all clean segnet tiny-segnet segnet_strided_upsample
 
 # default args
 local=false
@@ -28,6 +28,7 @@ data/split_tiny/.sentinel=$(DATA_DIR)/split_tiny/.sentinel
 tmp/data/split/.sentinel=$(TMP_DATA_DIR)/split/.sentinel
 tmp/data/split_tiny/.sentinel=$(TMP_DATA_DIR)/split_tiny/.sentinel
 models/segnet.pth=$(MODEL_DIR)/segnet.pth
+models/segnet_strided_upsample.pth=$(MODEL_DIR)/segnet_strided_upsample.pth
 
 
 all: models/segnet.pth
@@ -98,6 +99,27 @@ segnet: $(tmp/data/split/.sentinel)
 	$(TMP_DATA_DIR)/split/class \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet
+
+# train and save
+models/segnet_strided_upsample.pth:$(models/segnet_strided_upsample.pth)
+$(models/segnet_strided_upsample.pth): $(tmp/data/split/.sentinel)
+	mkdir -p $(MODEL_DIR)
+	python src/models/train.py \
+	$(TMP_DATA_DIR)/split/sim \
+	$(TMP_DATA_DIR)/split/real \
+	$(TMP_DATA_DIR)/split/class \
+	--save-dir=$(MODEL_DIR) \
+	--config-file=$(config_file) \
+	--seg-model-name=segnet_strided_upsample
+
+# train only (no save)
+segnet_strided_upsample: $(tmp/data/split/.sentinel)
+	python src/models/train.py \
+	$(TMP_DATA_DIR)/split/sim \
+	$(TMP_DATA_DIR)/split/real \
+	$(TMP_DATA_DIR)/split/class \
+	--config-file=$(config_file) \
+	--seg-model-name=segnet_strided_upsample
 
 # train only (no save)
 tiny-segnet: $(tmp/data/split_tiny/.sentinel)

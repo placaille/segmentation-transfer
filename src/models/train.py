@@ -28,7 +28,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 @click.option('--config-file', type=click.Path(exists=True, dir_okay=False))
 @click.option('--batch-size', type=int, default=32, help='(default 32)')
 @click.option('--seg-model-name', default='segnet', type=click.Choice([
-              'segnet',
+              'segnet', 'segnet_strided_upsample'
               ]), help='Name of model architecture (default segnet)')
 @click.option('--early-stop-patience', type=int, default=10)
 @click.option('--server', type=str, default=None)
