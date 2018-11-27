@@ -92,7 +92,7 @@ To compute the weights, we use the average number of pixels per image in the tra
 | ------------ | - | ------- | ------ |
 | Black | 89.4 % | 25 % | 0.51% |
 | White | 8.3 % | 25 % | 5.51% |
-| Red | 0.7 % | 25 % | 65.37% |
+| Red | 0.7 % | 25 % | 65.38% |
 | Yellow | 1.6% | 25 % | 28.60% |
 
 ## Real Duckiebot images
