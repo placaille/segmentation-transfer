@@ -55,21 +55,21 @@ class SegNetStridedUpsample(nn.Module):
         self.conv43 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.bn43 = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
 
-        self.conv51 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
-        self.bn51 = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
-        self.conv52 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
-        self.bn52 = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
-        self.conv53 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
-        self.bn53 = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
-
-        self.tconv54d = nn.ConvTranspose2d(512, 512, kernel_size=(3, 2), stride=2)
-        self.bn54d = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
-        self.conv53d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
-        self.bn53d = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
-        self.conv52d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
-        self.bn52d = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
-        self.conv51d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
-        self.bn51d = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
+        # self.conv51 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        # self.bn51 = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
+        # self.conv52 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        # self.bn52 = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
+        # self.conv53 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        # self.bn53 = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
+        #
+        # self.tconv54d = nn.ConvTranspose2d(512, 512, kernel_size=(3, 2), stride=2)
+        # self.bn54d = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
+        # self.conv53d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        # self.bn53d = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
+        # self.conv52d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        # self.bn52d = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
+        # self.conv51d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
+        # self.bn51d = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
 
         self.tconv44d = nn.ConvTranspose2d(512, 512, kernel_size=(3, 2), stride=2)
         self.bn44d = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
@@ -130,21 +130,21 @@ class SegNetStridedUpsample(nn.Module):
         x4p = F.max_pool2d(x43, kernel_size=2, stride=2)
         size4 = x43.size()
 
-        # Stage 5
-        x51 = F.relu(self.bn51(self.conv51(x4p)))
-        x52 = F.relu(self.bn52(self.conv52(x51)))
-        x53 = F.relu(self.bn53(self.conv53(x52)))
-        x5p = F.max_pool2d(x53, kernel_size=2, stride=2)
-        size5 = x53.size()
-
-        # Stage 5d
-        x54d = F.relu(self.bn54d(self.tconv54d(x5p)))
-        x53d = F.relu(self.bn53d(self.conv53d(x54d)))
-        x52d = F.relu(self.bn52d(self.conv52d(x53d)))
-        x51d = F.relu(self.bn51d(self.conv51d(x52d)))
+        # # Stage 5
+        # x51 = F.relu(self.bn51(self.conv51(x4p)))
+        # x52 = F.relu(self.bn52(self.conv52(x51)))
+        # x53 = F.relu(self.bn53(self.conv53(x52)))
+        # x5p = F.max_pool2d(x53, kernel_size=2, stride=2)
+        # size5 = x53.size()
+        #
+        # # Stage 5d
+        # x54d = F.relu(self.bn54d(self.tconv54d(x5p)))
+        # x53d = F.relu(self.bn53d(self.conv53d(x54d)))
+        # x52d = F.relu(self.bn52d(self.conv52d(x53d)))
+        # x51d = F.relu(self.bn51d(self.conv51d(x52d)))
 
         # Stage 4d
-        x44d = F.relu(self.bn44d(self.tconv44d(x51d)))
+        x44d = F.relu(self.bn44d(self.tconv44d(x4p)))
         x43d = F.relu(self.bn43d(self.conv43d(x44d)))
         x42d = F.relu(self.bn42d(self.conv42d(x43d)))
         x41d = F.relu(self.bn41d(self.conv41d(x42d)))
