@@ -63,7 +63,10 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
     if save_dir:
         seg_model.save(os.path.join(save_dir, '{}.pth'.format(seg_model.name)))
 
-    loss = nn.CrossEntropyLoss()
+    # adjusted class weights [black, white, red, yellow] see README.md
+    class_weights = [0.0051, 0.0551, 0.6538, 0.2860]
+
+    loss = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.Adam(seg_model.parameters())
 
     print('Initializing misc..')
