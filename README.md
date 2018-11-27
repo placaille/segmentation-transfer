@@ -76,6 +76,25 @@ The distributions of the classes are the following
 ('train set: ', {black: 17154, white: 1602, red: 137, yellow: 304})
 ```
 
+Class 0: Black
+Class 1: White
+Class 2: Red
+Class 3: Yellow
+
+## Adjusted weights in loss
+
+Given our dataset is highly unbalanced (a lot more black pixels), we add an importance factor to the loss for each class which is inversly proportional to the number of pixels. I.e., reduce the importance of predicting correctly black pixels, and increase the importance of predicting the yellow pixels.
+
+To compute the weights, we use the average number of pixels per image in the training set as mentionned above.
+
+
+| Pixel color | % |
+| ----------- | - |
+| Black | 89.4 % |
+| White | 8.3 % |
+| Red | 0.7 % |
+| Yellow | 1.6% |
+
 ## Real Duckiebot images
 
 The database of logs can be found [here](http://ipfs.duckietown.org:8080/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/gallery.html). Files can be directly downloaded from [here](https://gateway.ipfs.io/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/) using the following command.
