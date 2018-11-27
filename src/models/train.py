@@ -104,6 +104,8 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
                 visualiser.plot(X, data, title='Loss per batch', legend=['Loss'], iteration=2, update='append')
 
             del logits
+            del loss_seg
+            optimizer.zero_grad()
             torch.cuda.empty_cache()
 
             results['partition_avg_loss'] = np.divide(partition_loss, batch_per_part)
