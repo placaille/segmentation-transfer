@@ -5,9 +5,9 @@ import torch.nn.functional as F
 from torch import nn
 
 
-def get_seg_model(model_name, data_provider):
+def get_seg_model(model_name, num_classes, input_channels):
     if model_name == 'segnet':
-        model = SegNet(data_provider.input_channels, data_provider.num_classes)
+        model = SegNet(input_channels, num_classes)
     else:
         raise ValueError('{} not a valid model name'.format(model_name))
     model.name = model_name

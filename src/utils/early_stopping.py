@@ -18,9 +18,10 @@ class EarlyStopper(object):
         self.best_id = 0
         self.best_value = -float('inf') if high_is_better else float('inf')
 
-    def update(self, stats, id):
+    def update(self, stats, epoch_id, batch_id):
         if stats[self.criteria] > self.best_value:
-            self.best_id = id
+            self.best_epoch_id = epoch_id
+            self.best_batch_id = batch_id
             self.best_value = stats[self.criteria]
             self.patience_counter = self.patience
         else:

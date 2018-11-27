@@ -1,8 +1,8 @@
 #!/bin/bash
-export HOME=`getent passwd $USER | cut -d':' -f6`
-source ~/.bashrc
-export THEANO_FLAGS=...
-export PYTHONUNBUFFERED=1
+# export HOME=`getent passwd $USER | cut -d':' -f6`
+# source ~/.bashrc
+# export THEANO_FLAGS=...
+# export PYTHONUNBUFFERED=1
 echo Running on $HOSTNAME
 
 PORT=$1

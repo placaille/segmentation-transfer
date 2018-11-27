@@ -20,12 +20,13 @@ endif
 data/videos/download.info=$(DATA_DIR)/videos/download.info
 data/videos/real.hdf5=$(DATA_DIR)/videos/real.hdf5
 data/hdf5/real.hdf5=$(DATA_DIR)/hdf5/real.hdf5
-data/hdf5/classes.hdf5=$(DATA_DIR)/hdf5/classes.hdf5
-data/hdf5/sim.hdf5=$(DATA_DIR)/hdf5/sim.hdf5
-data/hdf5/.sentinel=$(DATA_DIR)/hdf5/.sentinel
-data/hdf5_tiny/.sentinel=$(DATA_DIR)/hdf5_tiny/.sentinel
-tmp/data/hdf5/.sentinel=$(TMP_DATA_DIR)/hdf5/.sentinel
-tmp/data/hdf5_tiny/.sentinel=$(TMP_DATA_DIR)/hdf5_tiny/.sentinel
+data/split/real/.sentinel=$(DATA_DIR)/split/real/.sentinel
+data/split/class/.sentinel=$(DATA_DIR)/split/class/.sentinel
+data/split/sim/.sentinel=$(DATA_DIR)/split/sim/.sentinel
+data/split/.sentinel=$(DATA_DIR)/split/.sentinel
+data/split_tiny/.sentinel=$(DATA_DIR)/split_tiny/.sentinel
+tmp/data/split/.sentinel=$(TMP_DATA_DIR)/split/.sentinel
+tmp/data/split_tiny/.sentinel=$(TMP_DATA_DIR)/split_tiny/.sentinel
 models/segnet.pth=$(MODEL_DIR)/segnet.pth
 
 
@@ -54,59 +55,55 @@ $(data/hdf5/real.hdf5): $(data/videos/real.hdf5)
 	python src/data/split.py
 
 # make sentinel if all data is present
-data/hdf5/.sentinel:$(data/hdf5/.sentinel)
-$(data/hdf5/.sentinel): $(data/hdf5/real.hdf5) $(data/hdf5/classes.hdf5) $(data/hdf5/sim.hdf5)
+data/split/.sentinel:$(data/split/.sentinel)
+$(data/split/.sentinel): $(data/split/real/.sentinel) $(data/split/class/.sentinel) $(data/split/sim/.sentinel)
 	@touch $@
 
 # make sentinel if all data is present
-data/hdf5_tiny/.sentinel:$(data/hdf5_tiny/.sentinel)
-$(data/hdf5_tiny/.sentinel): $(data/hdf5_tiny/real_tiny.hdf5) $(data/hdf5_tiny/classes_tiny.hdf5) $(data/hdf5_tiny/sim_tiny.hdf5)
+data/split_tiny/.sentinel:$(data/split_tiny/.sentinel)
+$(data/split_tiny/.sentinel): $(data/split_tiny/real/.sentinel) $(data/split_tiny/class/.sentinel) $(data/split_tiny/sim/.sentinel)
 	@touch $@
 
 # copy to tmp location
-tmp/data/hdf5/.sentinel:$(tmp/data/hdf5/.sentinel)
-$(tmp/data/hdf5/.sentinel): $(data/hdf5/.sentinel)
-	mkdir -p $(TMP_DATA_DIR)/hdf5
-	cp $(DATA_DIR)/hdf5/sim.hdf5 $(TMP_DATA_DIR)/hdf5/
-	cp $(DATA_DIR)/hdf5/real.hdf5 $(TMP_DATA_DIR)/hdf5/
-	cp $(DATA_DIR)/hdf5/classes.hdf5 $(TMP_DATA_DIR)/hdf5/
+tmp/data/split/.sentinel:$(tmp/data/split/.sentinel)
+$(tmp/data/split/.sentinel): $(data/split/.sentinel)
+	mkdir -p $(TMP_DATA_DIR)/split
+	cp -r $(DATA_DIR)/split $(TMP_DATA_DIR)
 	@touch $@
 
 # copy tiny to tmp location
-tmp/data/hdf5_tiny/.sentinel:$(tmp/data/hdf5_tiny/.sentinel)
-$(tmp/data/hdf5_tiny/.sentinel): $(data/hdf5_tiny/.sentinel)
-	mkdir -p $(TMP_DATA_DIR)/hdf5_tiny
-	cp $(DATA_DIR)/hdf5_tiny/sim_tiny.hdf5 $(TMP_DATA_DIR)/hdf5_tiny/
-	cp $(DATA_DIR)/hdf5_tiny/real_tiny.hdf5 $(TMP_DATA_DIR)/hdf5_tiny/
-	cp $(DATA_DIR)/hdf5_tiny/classes_tiny.hdf5 $(TMP_DATA_DIR)/hdf5_tiny/
+tmp/data/split_tiny/.sentinel:$(tmp/data/split_tiny/.sentinel)
+$(tmp/data/split_tiny/.sentinel): $(data/split_tiny/.sentinel)
+	mkdir -p $(TMP_DATA_DIR)/split_tiny
+	cp -r $(DATA_DIR)/split_tiny $(TMP_DATA_DIR)
 	@touch $@
 
 # train and save
 models/segnet.pth:$(models/segnet.pth)
-$(models/segnet.pth): $(tmp/data/hdf5/.sentinel)
+$(models/segnet.pth): $(tmp/data/split/.sentinel)
 	mkdir -p $(MODEL_DIR)
 	python src/models/train.py \
-	$(TMP_DATA_DIR)/hdf5/sim.hdf5 \
-	$(TMP_DATA_DIR)/hdf5/real.hdf5 \
-	$(TMP_DATA_DIR)/hdf5/classes.hdf5 \
+	$(TMP_DATA_DIR)/split/sim \
+	$(TMP_DATA_DIR)/split/real \
+	$(TMP_DATA_DIR)/split/class \
 	--save-dir=$(MODEL_DIR) \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet
 
 # train only (no save)
-segnet: $(tmp/data/hdf5/.sentinel)
+segnet: $(tmp/data/split/.sentinel)
 	python src/models/train.py \
-	$(TMP_DATA_DIR)/hdf5/sim.hdf5 \
-	$(TMP_DATA_DIR)/hdf5/real.hdf5 \
-	$(TMP_DATA_DIR)/hdf5/classes.hdf5 \
+	$(TMP_DATA_DIR)/split/sim \
+	$(TMP_DATA_DIR)/split/real \
+	$(TMP_DATA_DIR)/split/class \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet
 
 # train only (no save)
-tiny-segnet: $(tmp/data/hdf5_tiny/.sentinel)
+tiny-segnet: $(tmp/data/split_tiny/.sentinel)
 	python src/models/train.py \
-	$(TMP_DATA_DIR)/hdf5_tiny/sim_tiny.hdf5 \
-	$(TMP_DATA_DIR)/hdf5_tiny/real_tiny.hdf5 \
-	$(TMP_DATA_DIR)/hdf5_tiny/classes_tiny.hdf5 \
+	$(TMP_DATA_DIR)/split_tiny/sim \
+	$(TMP_DATA_DIR)/split_tiny/real \
+	$(TMP_DATA_DIR)/split_tiny/class \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet

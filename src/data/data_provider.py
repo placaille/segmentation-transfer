@@ -1,38 +1,77 @@
 import click
 import torch
 import math
+import os
 import numpy as np
 
-from torch.utils.data import DataLoader
-from data.dataset import Hdf5TorchDatasetWithLabels, Hdf5TorchDatasetWithoutLabels
+from torch.utils.data import DataLoader, TensorDataset
+from data.dataset import DatasetOfPartitions, CustomDataset
 
 
-class Hdf5DataProvider(object):
-    def __init__(self, input_hdf5_path, batch_size, num_classes, label_hdf5_path=None,
-                 num_workers=0):
+class PartitionProvider(object):
+    def __init__(self, input_dir, label_dir=None, num_workers=0,
+                 partition_batch_size=32, partition_num_workers=0):
         """
-        DataProvider to create train/valid/test iterators
-        Arguments:
-            input_hdf5_path (str): path to hdf5 with 'train' and 'valid' datasets
-            batch_size  (int)
-            num_classes (int)
-            label_hdf5_path (str): default None
+        Provider for partitions of dataset which is split in files
         """
-        if label_hdf5_path is None:
-            train_dataset = Hdf5TorchDatasetWithoutLabels(input_hdf5_path, 'train')
-            valid_dataset = Hdf5TorchDatasetWithoutLabels(input_hdf5_path, 'valid')
+
+        input_train_dir = os.path.join(input_dir, 'train')
+        input_valid_dir = os.path.join(input_dir, 'valid')
+
+        if label_dir:
+            label_train_dir = os.path.join(label_dir, 'train')
+            label_valid_dir = os.path.join(label_dir, 'valid')
         else:
-            train_dataset = Hdf5TorchDatasetWithLabels(input_hdf5_path, label_hdf5_path, 'train')
-            valid_dataset = Hdf5TorchDatasetWithLabels(input_hdf5_path, label_hdf5_path, 'valid')
+            label_train_dir = None
+            label_valid_dir = None
 
-        self.num_train = len(train_dataset)
-        self.num_valid = len(valid_dataset)
-        self.num_classes = num_classes
+        train_partitions = DatasetOfPartitions(input_train_dir, label_train_dir)
+        valid_partitions = DatasetOfPartitions(input_valid_dir, label_valid_dir)
 
-        # input data in hfg5 is (N, 120, 160, 3)
-        self.num_pixels = np.prod(train_dataset.input_data.shape[1:])
-        self.input_channels = train_dataset.input_data.shape[-1]
-        self.iters_per_epoch = math.ceil(self.num_train / batch_size)
+        self.num_train_files = len(train_partitions)
+        self.num_valid_files = len(valid_partitions)
+        self.partition_batch_size = partition_batch_size
+        self.partition_num_workers = partition_num_workers
 
-        self.train_iterator = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=num_workers)
-        self.valid_iterator = DataLoader(valid_dataset, batch_size, num_workers=num_workers)
+        self.train_partition_iterator = DataLoader(
+            train_partitions,
+            batch_size=1,
+            shuffle=True,
+            num_workers=num_workers
+        )
+        self.valid_partition_iterator = DataLoader(
+            valid_partitions,
+            batch_size=1,
+            shuffle=False,
+            num_workers=num_workers
+        )
+
+    def get_train_iterator(self, partition):
+        if len(partition) == 2:
+            input_partition, label_partition = partition
+            dataset = CustomDataset(input_partition[0], label_partition[0])
+        elif len(partition) == 1:
+            dataset = CustomDataset(partition[0])
+
+        data_loader = DataLoader(
+            dataset=dataset,
+            batch_size=self.partition_batch_size,
+            shuffle=True,
+            num_workers=self.partition_num_workers
+        )
+        return data_loader
+
+    def get_valid_iterator(self, partition):
+        if len(partition) == 2:
+            input_partition, label_partition = partition
+            dataset = CustomDataset(input_partition[0], label_partition[0])
+        elif len(partition) == 1:
+            dataset = CustomDataset(partition[0])
+
+        data_loader = DataLoader(
+            dataset=dataset,
+            batch_size=self.partition_batch_size,
+            shuffle=False,
+            num_workers=self.partition_num_workers
+            )
+        return data_loader

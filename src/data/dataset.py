@@ -1,51 +1,95 @@
 import torch
 import h5py
 import torchvision
+import os
+import pickle as pkl
+import numpy as np
 
 import torch.utils.data as torch_data
 from torchvision import transforms
 
 
-def get_transform():
+def get_input_transform():
     transform = transforms.Compose([
+        transforms.Lambda(lambda x: x.float()),
         transforms.Lambda(lambda x: x.permute(2, 0, 1)),
         transforms.Lambda(lambda x: x.div_(255)),
     ])
     return transform
 
 
-class Hdf5TorchDatasetWithLabels(torch_data.Dataset):
-    def __init__(self, input_path, label_path, dataset_name):
-        super(Hdf5TorchDatasetWithLabels).__init__()
+def get_label_transform():
+    transform = transforms.Compose([
+        transforms.Lambda(lambda x: x.long()),
+    ])
+    return transform
 
-        input_file = h5py.File(input_path, mode='r')
-        label_file = h5py.File(label_path, mode='r')
 
-        self.transform_input = get_transform()
+class DatasetOfPartitions(torch_data.Dataset):
+    def __init__(self, input_dir, label_dir=None, ext='npy', func_load=None):
+        """
+        Make a dataset that return iterators which iterate over sub_datasets themselves.
+        The data for each sub_dataset is in seperate files
+        """
+        super(DatasetOfPartitions).__init__()
 
-        self.input_data = input_file[dataset_name]
-        self.label_data = label_file[dataset_name]
+        self.has_labels = True if label_dir else False
+        self.input_files = sorted([os.path.join(input_dir, x) for x in os.listdir(input_dir) \
+                                   if x.endswith(ext)])
+
+        if self.has_labels:
+            self.label_files = sorted([os.path.join(label_dir, x) for x in os.listdir(label_dir) \
+                                       if x.endswith(ext)])
+            assert len(self.input_files) == len(self.label_files)
+
+        self.file_indices = range(len(self.input_files))
+
+        if ext == 'pkl':
+            self.func_load = pkl.load
+        elif ext == 'npy':
+            self.func_load = np.load
+        else:
+            assert func_load is not None
 
     def __getitem__(self, index):
-        input = torch.FloatTensor(self.input_data[index])
-        label = torch.LongTensor(self.label_data[index])
-        return self.transform_input(input), label
+        partition_id = self.file_indices[index]
+
+        input = self.func_load(self.input_files[partition_id])
+
+        if self.has_labels:
+            label = self.func_load(self.label_files[partition_id])
+            return [torch.from_numpy(input), torch.from_numpy(label)]
+        else:
+            return [torch.from_numpy(input)]
 
     def __len__(self):
-        return self.input_data.shape[0]
+        return len(self.file_indices)
 
 
-class Hdf5TorchDatasetWithoutLabels(torch_data.Dataset):
-    def __init__(self, input_path, dataset_name):
-        super(Hdf5TorchDatasetWithoutLabels).__init__()
+class CustomDataset(torch_data.Dataset):
+    def __init__(self, input_data, label_data=None):
 
-        input_file = h5py.File(input_path, mode='r')
-        self.transform_input = get_transform()
-        self.input_data = input_file[dataset_name]
+        if label_data is not None:
+            self.has_labels = True
+        else:
+            self.has_labels = False
+        self.transform_input = get_input_transform()
+        self.transform_label = get_label_transform()
+
+        self.input_data = input_data
+        if self.has_labels:
+            self.label_data = label_data
 
     def __getitem__(self, index):
-        input = torch.FloatTensor(self.input_data[index])
-        return self.transform_input(input)
+
+        raw_input = self.input_data[index]
+        input = self.transform_input(raw_input)
+
+        if self.has_labels:
+            label = self.transform_label(self.label_data[index])
+            return (input, label)
+        else:
+            return input
 
     def __len__(self):
         return self.input_data.shape[0]
