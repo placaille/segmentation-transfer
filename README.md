@@ -88,12 +88,12 @@ Given our dataset is highly unbalanced (a lot more black pixels), we add an impo
 To compute the weights, we use the average number of pixels per image in the training set as mentionned above.
 
 
-| Pixel color | % |
-| ----------- | - |
-| Black | 89.4 % |
-| White | 8.3 % |
-| Red | 0.7 % |
-| Yellow | 1.6% |
+| Pixel color  | % | ideal % | adjusted class weight |
+| ------------ | - | ------- | ------ |
+| Black | 89.4 % | 25 % | 0.51% |
+| White | 8.3 % | 25 % | 5.51% |
+| Red | 0.7 % | 25 % | 65.37% |
+| Yellow | 1.6% | 25 % | 28.60% |
 
 ## Real Duckiebot images
 
