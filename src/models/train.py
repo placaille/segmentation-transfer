@@ -95,7 +95,10 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
                 logits = seg_model(input.to(device))
 
                 optimizer.zero_grad()
-                loss_seg = loss(logits.view(-1, num_classes), labels.view(-1).to(device))
+                loss_seg = loss(
+                    logits.permute(0, 2, 3, 1).contiguous().view(-1, num_classes),
+                    labels.view(-1).to(device)
+                )
                 loss_seg.backward()
                 optimizer.step()
 
