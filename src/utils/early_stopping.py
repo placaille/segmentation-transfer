@@ -24,7 +24,9 @@ class EarlyStopper(object):
             self.best_batch_id = batch_id
             self.best_value = stats[self.criteria]
             self.patience_counter = self.patience
+            self.new_best = True
         else:
+            self.new_best = False
             self.patience_counter -= 1
             self.stop = True if self.patience_counter <=0 else False
 
