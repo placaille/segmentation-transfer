@@ -33,7 +33,7 @@ class EarlyStopper(object):
     def print_stop(self):
         print('Stopping training due to lack of improvement..')
         print('Best performing model:\t epoch {}, batch {} ({} {:7.4f})'.format(
-            early_stopper.best_epoch_id,
-            early_stopper.best_batch_id,
-            early_stopper.criteria,
-            early_stopper.best_value))
+            self.best_epoch_id,
+            self.best_batch_id,
+            self.criteria,
+            self.best_value))
