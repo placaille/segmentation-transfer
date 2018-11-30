@@ -1,14 +1,15 @@
-±import click
+import click
 import sys
 import torch
 import os
 import models
+import itertools
 import numpy as np
 
 sys.path.append('src')
 
 from torch import nn, optim
-from data import PartitionProvider
+from data import PartitionProvider, InfiniteProviderFromPartitions
 from utils import CommandWithConfigFile, EarlyStopper
 from utils import vis
 from evaluate import evaluate
@@ -22,15 +23,11 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 @click.command(cls=CommandWithConfigFile('config_file'))
 @click.argument('data-sim-dir', type=click.Path(exists=True, file_okay=False))
 @click.argument('data-real-dir', type=click.Path(exists=True, file_okay=False))
-@click.argument('data-label-dir', type=click.Path(exists=True, file_okay=False))
 @click.option('--run-name', type=str)
 @click.option('--save-dir', type=click.Path(writable=True, file_okay=False))
 @click.option('--visdom-dir', type=click.Path(writable=True, file_okay=False))
 @click.option('--config-file', type=click.Path(exists=True, dir_okay=False))
 @click.option('--batch-size', type=int, default=32, help='(default 32)')
-@click.option('--seg-model-name', default='segnet', type=click.Choice([
-              'segnet', 'segnet_strided_upsample'
-              ]), help='Name of model architecture (default segnet)')
 @click.option('--discr-model-name', default='dcgan_discr', help='Name of discriminator model (default dcgan_discr)',
             type=click.Choice(['dcgan_discr']))
 @click.option('--gen-model-name', default='style_transfer_gen', help='Name of generator model (default style_transfer_gen)',
@@ -40,14 +37,14 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 @click.option('--port', type=str, default=None)
 @click.option('--reload', is_flag=True,
                help='Flag notifying that the experiment is being reloaded.')
-def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batch_size,
-         config_file, seg_model_name, discr_model_name, gen_model_name, early_stop_patience,
+def main(data_sim_dir, data_real_dir, save_dir, visdom_dir, batch_size,
+         config_file, discr_model_name, gen_model_name, early_stop_patience,
          server, port, reload, run_name):
 
     print('Loading data..')
     num_classes = 4
     input_channels = 3
-    real_data = PartitionProvider(
+    real_data = InfiniteProviderFromPartitions(
         input_dir=data_real_dir,
         label_dir=None,
         num_workers=0,
@@ -55,42 +52,52 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
         partition_num_workers=2
     )
 
-    sim_data = PartitionProvider(
+    sim_data = InfiniteProviderFromPartitions(
         input_dir=data_sim_dir,
-        label_dir=data_label_dir,
+        label_dir=None,
         num_workers=0,
         partition_batch_size=batch_size,
         partition_num_workers=2
     )
 
-    print('Building model & loading on GPU (if applicable)..')
-    model_seg = models.get_seg_model(seg_model_name, num_classes, input_channels).to(device)
-    model_gen = models.get_generator_model(gen_model_name, real_data_provider).to(device)
-    model_discr = models.get_discriminator_model(discr_model_name, sim_data_provider).to(device)
-    if save_dir:
-        model_seg.save(os.path.join(save_dir, '{}.pth'.format(model_seg.name)))
-        model_gen.save(os.path.join(save_dir, '{}.pth'.format(model_gen.name)))
-        model_discr.save(os.path.join(save_dir, '{}.pth'.format(model_discr.name)))
+    real_data.init_iterator(train=True)
+    sim_data.init_iterator(train=True)
+    # print('Building model & loading on GPU (if applicable)..')
+    # model_gen = models.get_generator_model(gen_model_name, real_data_provider).to(device)
+    # model_discr = models.get_discriminator_model(discr_model_name, sim_data_provider).to(device)
+    # if save_dir:
+        # model_gen.save(os.path.join(save_dir, '{}.pth'.format(model_gen.name)))
+        # model_discr.save(os.path.join(save_dir, '{}.pth'.format(model_discr.name)))
+    #
+    # obj_adv = nn.BCELoss()
+    # label_true = 1
+    # label_fake = 0
+    #
+    # optim_gen = optim.Adam(model_gen.parameters())
+    # optim_discr = optim.Adam(model_discr.parameters())
 
-    # adjusted class weights [black, white, red, yellow] see README.md
-    class_weights = torch.tensor([0.0051, 0.0551, 0.6538, 0.2860]).to(device)
-
-    obj_ce = nn.CrossEntropyLoss(weight=class_weights)
-    obj_adv = nn.BCELoss()
-
-    optim_seg = optim.Adam(model_seg.parameters())
-    optim_gen = optim.Adam(model_gen.parameters())
-    optim_discr = optim.Adam(model_discr.parameters())
-
-    print('Initializing misc..')
-    batch_count = 0
-    partition_count = 0
-    results = dict()
-    early_stopper = EarlyStopper('accuracy', early_stop_patience)
-    visualiser = vis.Visualiser(server, port, run_name, reload, visdom_dir)
+    # print('Initializing misc..')
+    # batch_count = 0
+    # partition_count = 0
+    # results = dict()
+    # early_stopper = EarlyStopper('accuracy', early_stop_patience)
+    # visualiser = vis.Visualiser(server, port, run_name, reload, visdom_dir)
 
     print('Starting training..')
     for epoch_id in count(start=1):
+
+        # TODO: Return batch from real and sim, no matter the partition.
+        #       The partition management should be handled out of the training
+        #       loop and not be seen here. Should modify directly the data_provider
+
+        counter = 0
+        while True:
+            batch_real = next(real_data)
+            batch_sim = next(sim_data)
+            counter+=1
+            print(counter)
+
+
         for sim_partition in sim_data.train_partition_iterator:
             start = timer()
             seg_model.train()
@@ -100,7 +107,25 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
 
             sim_data_train_iterator = sim_data.get_train_iterator(sim_partition)
 
+            for batch_real, batch_sim in itertools.zip_longest(real_data.train, sim_data.train, fillvalue=None):
+                if batch_real is None and batch_sim is None:
+                    reset_sim = True
+                    reset_real = True
+                    # resample both iterators
+                elif batch_real is None:
+                    reset_real = True
+                    # resample the real iterator
+                elif batch_sim is None:
+                    reset_sim = True
+                    # resample the sim iterator
+
+
             for batch_id, batch in enumerate(sim_data_train_iterator):
+
+
+                # train discriminator on real data
+                # train discriminator on fake data
+                # train generator
                 batch_count += 1
                 batch_per_part += 1
 

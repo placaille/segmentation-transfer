@@ -1,1 +1,1 @@
-from data.data_provider import PartitionProvider
+from data.data_provider import PartitionProvider, InfiniteProviderFromPartitions
