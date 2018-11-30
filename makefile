@@ -1,4 +1,4 @@
-.PHONY: all clean segnet tiny-segnet segnet_strided_upsample
+.PHONY: all clean segnet tiny-segnet segnet_strided_upsample test
 
 # default args
 local=false
@@ -141,3 +141,11 @@ tiny-segnet: $(tmp/data/split_tiny/.sentinel)
 	--run-name=$(run_name) \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet
+
+# testing only
+test: $(tmp/data/split/.sentinel)
+	python src/models/train_transfer.py \
+	$(TMP_DATA_DIR)/split/sim \
+	$(TMP_DATA_DIR)/split/real \
+	--run-name=$(run_name) \
+	--config-file=$(config_file)
