@@ -10,11 +10,13 @@ ifeq ($(local), false)
 DATA_DIR=/data/lisa/data/duckietown-segmentation/data
 MODEL_DIR=/data/milatmp1/$(USER)/duckietown-segmentation/models/$(run_name)
 VISDOM_DIR=/data/milatmp1/$(USER)/duckietown-segmentation/visdom/$(run_name)
+PRE_TRAINED_PATH=/data/milatmp1/$(USER)/duckietown-segmentation/models/pre-trained
 TMP_DATA_DIR=/Tmp/$(USER)/segmentation-transfer/data
 else
 DATA_DIR=./data
 MODEL_DIR=./models/$(run_name)
 VISDOM_DIR=./visdom/$(run_name)
+PRE_TRAINED_PATH=./models/pre-trained
 TMP_DATA_DIR=/tmp/segmentation-transfer/data
 endif
 
@@ -87,7 +89,7 @@ models/segnet.pth:$(models/segnet.pth)
 $(models/segnet.pth): $(tmp/data/split/.sentinel)
 	mkdir -p $(MODEL_DIR)
 	mkdir -p $(VISDOM_DIR)
-	python src/models/train.py \
+	python src/models/train_segmentation.py \
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
 	$(TMP_DATA_DIR)/split/class \
@@ -99,7 +101,7 @@ $(models/segnet.pth): $(tmp/data/split/.sentinel)
 
 # train only (no save)
 segnet: $(tmp/data/split/.sentinel)
-	python src/models/train.py \
+	python src/models/train_segmentation.py \
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
 	$(TMP_DATA_DIR)/split/class \
@@ -112,7 +114,7 @@ models/segnet_strided_upsample.pth:$(models/segnet_strided_upsample.pth)
 $(models/segnet_strided_upsample.pth): $(tmp/data/split/.sentinel)
 	mkdir -p $(MODEL_DIR)
 	mkdir -p $(VISDOM_DIR)
-	python src/models/train.py \
+	python src/models/train_segmentation.py \
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
 	$(TMP_DATA_DIR)/split/class \
@@ -124,7 +126,7 @@ $(models/segnet_strided_upsample.pth): $(tmp/data/split/.sentinel)
 
 # train only (no save)
 segnet_strided_upsample: $(tmp/data/split/.sentinel)
-	python src/models/train.py \
+	python src/models/train_segmentation.py \
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
 	$(TMP_DATA_DIR)/split/class \
@@ -142,12 +144,12 @@ tiny-segnet: $(tmp/data/split_tiny/.sentinel)
 	--config-file=$(config_file) \
 	--seg-model-name=segnet
 
-# testing only
-test: $(tmp/data/split/.sentinel)
+# train only (no save)
+tiny-transfer: $(tmp/data/split_tiny/.sentinel)
 	python src/models/train_transfer.py \
-	$(TMP_DATA_DIR)/split/sim \
-	$(TMP_DATA_DIR)/split/real \
-	$(TMP_DATA_DIR)/split/class \
+	$(TMP_DATA_DIR)/split_tiny/sim \
+	$(TMP_DATA_DIR)/split_tiny/real \
+	$(TMP_DATA_DIR)/split_tiny/class \
 	--run-name=$(run_name) \
-	--config-file=$(config_file) \
-	--batch-per-eval=1
+	--config-file=$(config_file)
+	# --seg-model-path=$(PRE_TRAINED_PATH)/segnet.pth \

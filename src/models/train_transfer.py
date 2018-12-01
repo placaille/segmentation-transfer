@@ -89,14 +89,14 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
     optim_discr = optim.Adam(model_discr.parameters())
 
     print('Initializing misc..')
-    eval_count = 0
+    batch_count = 0
     results = dict()
     results['accuracy'] = 0
     early_stopper = EarlyStopper('accuracy', early_stop_patience)
     visualiser = vis.Visualiser(server, port, run_name, reload, visdom_dir)
 
     print('Starting training..')
-    for batch_count in count(start=1):
+    for eval_count in count(start=1):
 
         batch_since_eval = 0
         loss_discr_true = 0
@@ -112,6 +112,7 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
             batch_sim, _ = next(sim_data)
             assert batch_sim.shape[0] == batch_real.shape[0]
             b_size = batch_sim.shape[0]
+            batch_count += 1
 
             loss_d = 0
             optim_discr.zero_grad()
@@ -161,7 +162,7 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
 
         if seg_model_path:
             results.update(evaluate(model_seg, model_gen, sim_data, device))
-            early_stopper.update(results, epoch_id=None, batch_id=batch_count)
+            early_stopper.update(results, epoch_id=eval_count, batch_id=batch_count)
         log_and_viz_results(results, batch_count, eval_count, visualiser, start)
 
         if early_stopper.new_best and save_dir:
@@ -185,17 +186,17 @@ def log_and_viz_results(results, batch_id, eval_count, visualiser, start):
               timer()-start
           ))
 
-    X= np.array([eval_count]),
+    X = np.array([eval_count])
     data_d_fake = np.array([results['loss_discr_fake']])
     data_d_true = np.array([results['loss_discr_true']])
     data_gen = np.array([results['loss_gen']])
 
     visualiser.plot(X, data_d_fake, title='Discriminator fake loss', legend=['Loss'], iteration=0, update='append')
     visualiser.plot(X, data_d_true, title='Discriminator true loss', legend=['Loss'], iteration=1, update='append')
-    visualiser.plot(X, data_gen, title='Generator true loss', legend=['Loss'], iteration=2, update='append')
+    visualiser.plot(X, data_gen, title='Generator loss', legend=['Loss'], iteration=3, update='append')
 
     data = np.array([results['accuracy']])
-    visualiser.plot(X, data, title='Accuracy', legend=['Accuracy'], iteration=1, update='append')
+    visualiser.plot(X, data, title='Accuracy', legend=['Accuracy'], iteration=5, update='append')
     # visualiser.image(results['images'], title='Source image', iteration=0)
     # visualiser.image(results['targets'], title='Target image', iteration=1)
     # visualiser.image(results['segmented'], title='Segmented image', iteration=2)
