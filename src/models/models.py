@@ -16,18 +16,18 @@ def get_seg_model(model_name, num_classes, input_channels):
     return model
 
 
-def get_generator_model(model_name, data_provider):
+def get_generator_model(model_name, input_channels):
     if model_name == 'style_transfer_gen':
-        model = TransformerNet(data_provider.input_channels)
+        model = TransformerNet(input_channels)
     else:
         raise ValueError('{} not a valid model name'.format(model_name))
     model.name = model_name
     return model
 
 
-def get_discriminator_model(model_name, data_provider):
+def get_discriminator_model(model_name, input_channels):
     if model_name == 'dcgan_discr':
-        model = DCGANDiscriminator(data_provider.input_channels)
+        model = DCGANDiscriminator(input_channels)
     else:
         raise ValueError('{} not a valid model name'.format(model_name))
     model.name = model_name

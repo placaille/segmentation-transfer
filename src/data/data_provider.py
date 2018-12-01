@@ -57,7 +57,8 @@ class PartitionProvider(object):
             dataset=dataset,
             batch_size=self.partition_batch_size,
             shuffle=True,
-            num_workers=self.partition_num_workers
+            num_workers=self.partition_num_workers,
+            drop_last=True
         )
         return data_loader
 
