@@ -147,5 +147,7 @@ test: $(tmp/data/split/.sentinel)
 	python src/models/train_transfer.py \
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
+	$(TMP_DATA_DIR)/split/class \
 	--run-name=$(run_name) \
-	--config-file=$(config_file)
+	--config-file=$(config_file) \
+	--batch-per-eval=1
