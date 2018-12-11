@@ -151,5 +151,6 @@ tiny-transfer: $(tmp/data/split_tiny/.sentinel)
 	$(TMP_DATA_DIR)/split_tiny/real \
 	$(TMP_DATA_DIR)/split_tiny/class \
 	--run-name=$(run_name) \
-	--config-file=$(config_file)
-	# --seg-model-path=$(PRE_TRAINED_PATH)/segnet.pth \
+	--config-file=$(config_file) \
+	--seg-model-path=$(PRE_TRAINED_PATH)/segnet.pth \
+	--batch-per-eval=1

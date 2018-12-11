@@ -117,65 +117,38 @@ class InfiniteProviderFromPartitions(object):
             num_workers=num_workers
         )
 
-
-    def init_iterator(self, train=True):
-        self.train = train
-        if self.train:
-            partition_loader = self.train_partition_loader
-            get_loader = self.get_train_loader
-        else:
-            partition_loader = self.valid_partition_loader
-            get_loader = self.get_valid_loader
-
+    def init_train_iterator(self):
         # init partition and get first
-        partition_iterator = iter(partition_loader)
-        partition = next(partition_iterator)
+        self.train_partition_iterator = iter(self.train_partition_loader)
+        partition = next(self.train_partition_iterator)
 
         # get batch iterator based on partition
-        iterator = iter(get_loader(partition))
-        if self.train:
-            self.train_partition_iterator = partition_iterator
-            self.train_iterator = iterator
-        else:
-            self.valid_partition_iterator = partition_iterator
-            self.valid_iterator = iterator
+        self.train_iterator = iter(self.get_train_loader(partition))
 
+    def get_valid_iterator(self):
+        """
+        assumes only one partition for validation set
+        """
+        self.valid_partition_iterator = iter(self.valid_partition_loader)
+        partition = next(self.valid_partition_iterator)
+
+        return self.get_valid_loader(partition)
 
     def __next__(self):
-        if self.train:
-            partition_iterator = self.train_partition_iterator
-            partition_loader = self.train_partition_loader
-            get_loader = self.get_train_loader
-            iterator = self.train_iterator
-        else:
-            partition_iterator = self.valid_partition_iterator
-            partition_loader = self.valid_partition_loader
-            get_loader = self.get_valid_loader
-            iterator = self.valid_iterator
-
         try:
-            batch = next(iterator)
+            batch = next(self.train_iterator)
         except StopIteration:
             try:
                 # get next partition
-                partition = next(partition_iterator)
+                partition = next(self.train_partition_iterator)
             except StopIteration:
                 # restart partition_iterator
-                partition_iterator = iter(partition_loader)
-                partition = next(partition_iterator)
+                self.train_partition_iterator = iter(self.train_partition_loader)
+                partition = next(self.train_partition_iterator)
 
             # get batch iterator based on partition
-            iterator = iter(get_loader(partition))
-            batch = next(iterator)
-
-        if self.train:
-            self.train_partition_iterator = partition_iterator
-            self.train_partition_loader = partition_loader
-            self.train_iterator = iterator
-        else:
-            self.valid_partition_iterator = partition_iterator
-            self.valid_partition_loader = partition_loader
-            self.valid_iterator = iterator
+            self.train_iterator = iter(self.get_train_loader(partition))
+            batch = next(self.train_iterator)
 
         return batch
 

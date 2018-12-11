@@ -12,7 +12,7 @@ from torch import nn, optim
 from data import PartitionProvider, InfiniteProviderFromPartitions
 from utils import CommandWithConfigFile, EarlyStopper
 from utils import vis
-from evaluate import evaluate
+from evaluate import evaluate_transfer
 from itertools import count
 from timeit import default_timer as timer
 
@@ -66,8 +66,8 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
         partition_num_workers=2
     )
 
-    real_data.init_iterator(train=True)
-    sim_data.init_iterator(train=True)
+    real_data.init_train_iterator()
+    sim_data.init_train_iterator()
 
     print('Building model & loading on GPU (if applicable)..')
     model_gen = models.get_generator_model(gen_model_name, input_channels).to(device)
@@ -106,7 +106,7 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
         model_discr.train()
         start = timer()
 
-        while batch_since_eval <= batch_per_eval:
+        while batch_since_eval < batch_per_eval:
 
             batch_real = next(real_data)
             batch_sim, _ = next(sim_data)
@@ -161,8 +161,8 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
         results['loss_discr_true'] = np.divide(loss_discr_true, batch_since_eval)
 
         if seg_model_path:
-            results.update(evaluate(model_seg, model_gen, sim_data, device))
-            early_stopper.update(results, epoch_id=eval_count, batch_id=batch_count)
+            results.update(evaluate_transfer(model_seg, model_gen, real_data.get_valid_iterator(), device))
+            # early_stopper.update(results, epoch_id=eval_count, batch_id=batch_count)
         log_and_viz_results(results, batch_count, eval_count, visualiser, start)
 
         if early_stopper.new_best and save_dir:
@@ -195,11 +195,9 @@ def log_and_viz_results(results, batch_id, eval_count, visualiser, start):
     visualiser.plot(X, data_d_true, title='Discriminator true loss', legend=['Loss'], iteration=1, update='append')
     visualiser.plot(X, data_gen, title='Generator loss', legend=['Loss'], iteration=3, update='append')
 
-    data = np.array([results['accuracy']])
-    visualiser.plot(X, data, title='Accuracy', legend=['Accuracy'], iteration=5, update='append')
-    # visualiser.image(results['images'], title='Source image', iteration=0)
-    # visualiser.image(results['targets'], title='Target image', iteration=1)
-    # visualiser.image(results['segmented'], title='Segmented image', iteration=2)
+    visualiser.image(results['images'], title='Source image', iteration=0)
+    visualiser.image(results['transformed'], title='Transformed image', iteration=1)
+    visualiser.image(results['segmented'], title='Segmented image', iteration=2)
 
 
 if __name__ == '__main__':
