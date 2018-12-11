@@ -22,8 +22,7 @@ endif
 
 # hack for pointing to files
 data/videos/download.info=$(DATA_DIR)/videos/download.info
-data/videos/real.hdf5=$(DATA_DIR)/videos/real.hdf5
-data/hdf5/real.hdf5=$(DATA_DIR)/hdf5/real.hdf5
+data/videos/real.npy=$(DATA_DIR)/videos/real.npy
 data/split/real/.sentinel=$(DATA_DIR)/split/real/.sentinel
 data/split/class/.sentinel=$(DATA_DIR)/split/class/.sentinel
 data/split/sim/.sentinel=$(DATA_DIR)/split/sim/.sentinel
@@ -38,6 +37,7 @@ models/segnet_strided_upsample.pth=$(MODEL_DIR)/segnet_strided_upsample.pth
 all: models/segnet.pth
 
 clean:
+	rm -rf $(TMP_DATA_DIR)
 	rm -f $(MODEL_DIR)/*.pth
 	rm -f $(VISDOM_DIR)/*.out
 
@@ -50,15 +50,16 @@ $(data/videos/download.info):
 	$(DATA_DIR)/videos
 
 # extract frames
-data/videos/real.hdf5:$(data/videos/real.hdf5)
-$(data/videos/real.hdf5): $(data/videos/download.info)
-	python src/data/extract_frames.py $(DATA_DIR)/videos $(DATA_DIR)/hdf5/real.hdf5 \
+data/videos/real.npy:$(data/videos/real.npy)
+$(data/videos/real.npy): $(data/videos/download.info)
+	python src/data/extract_frames.py $(DATA_DIR)/videos $(DATA_DIR)/videos/real.npy \
 	--frame-skip 10
 
 # split real train/valid (ONLY REMOTE)
-data/hdf5/real.hdf5:$(data/hdf5/real.hdf5)
-$(data/hdf5/real.hdf5): $(data/videos/real.hdf5)
+data/split/real/.sentinel:$(data/split/real/.sentinel)
+$(data/split/real/.sentinel): $(data/videos/real.npy)
 	python src/data/split.py
+	@touch $@
 
 # make sentinel if all data is present
 data/split/.sentinel:$(data/split/.sentinel)
