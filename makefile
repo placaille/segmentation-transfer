@@ -1,4 +1,4 @@
-.PHONY: all clean segnet tiny-segnet segnet_strided_upsample tiny-transfer transfer
+.PHONY: all clean segnet tiny-segnet segnet_strided_upsample tiny-transfer transfer models/transfer.pth
 
 # default args
 local=false
@@ -109,6 +109,23 @@ segnet: $(tmp/data/split/.sentinel)
 	--run-name=$(run_name) \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet
+
+# train and save
+models/transfer.pth: $(tmp/data/split/.sentinel)
+	mkdir -p $(MODEL_DIR)
+	mkdir -p $(VISDOM_DIR)
+	python src/models/train_transfer.py \
+	$(TMP_DATA_DIR)/split/sim \
+	$(TMP_DATA_DIR)/split/real \
+	$(TMP_DATA_DIR)/split/class \
+	--run-name=$(run_name) \
+	--save-dir=$(MODEL_DIR) \
+	--visdom-dir=$(VISDOM_DIR) \
+	--config-file=$(config_file) \
+	--seg-model-name=segnet \
+	--seg-model-path=$(PRE_TRAINED_PATH)/segnet.pth \
+	--discr-model-name=dcgan_discr \
+	--gen-model-name=style_transfer_gen
 
 # train only (no save)
 transfer: $(tmp/data/split/.sentinel)

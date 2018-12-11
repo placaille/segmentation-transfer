@@ -42,10 +42,12 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 @click.option('--port', type=str, default=None)
 @click.option('--reload', is_flag=True,
                help='Flag notifying that the experiment is being reloaded.')
-@click.option('--batch-per-eval', type=int, default=500, help='default 500')
+@click.option('--batch-per-eval', type=int, default=5000, help='default 5000')
+@click.option('--batch-per-save', type=int, default=5000, help='default 5000')
+@click.option('--max-num-batch', type=int, default=250000, help='default 250000')
 def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batch_size,
-         config_file, discr_model_name, gen_model_name, early_stop_patience,
-         server, port, reload, run_name, batch_per_eval, seg_model_path, seg_model_name):
+         config_file, discr_model_name, gen_model_name, early_stop_patience, max_num_batch,
+         server, port, reload, run_name, batch_per_eval, batch_per_save, seg_model_path, seg_model_name):
 
     print('Loading data..')
     num_classes = 4
@@ -73,8 +75,8 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
     model_gen = models.get_generator_model(gen_model_name, input_channels).to(device)
     model_discr = models.get_discriminator_model(discr_model_name, input_channels).to(device)
     if save_dir:
-        model_gen.save(os.path.join(save_dir, '{}.pth'.format(model_gen.name)))
-        model_discr.save(os.path.join(save_dir, '{}.pth'.format(model_discr.name)))
+        model_gen.save(os.path.join(save_dir, '{}_{}.pth'.format(model_gen.name, 0)))
+        model_discr.save(os.path.join(save_dir, '{}_{}.pth'.format(model_discr.name, 0)))
 
     if seg_model_path:
         assert seg_model_name in seg_model_path
@@ -165,13 +167,13 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
             # early_stopper.update(results, epoch_id=eval_count, batch_id=batch_count)
         log_and_viz_results(results, batch_count, eval_count, visualiser, start)
 
-        if early_stopper.new_best and save_dir:
-            model_gen.save(os.path.join(save_dir, '{}.pth'.format(model_gen.name)))
-            model_discr.save(os.path.join(save_dir, '{}.pth'.format(model_disc.name)))
+        if save_dir and batch_count % batch_per_save == 0:
+            model_gen.save(os.path.join(save_dir, '{}_{}.pth'.format(model_gen.name, batch_count)))
+            model_discr.save(os.path.join(save_dir, '{}_{}.pth'.format(model_discr.name, batch_count)))
 
-        if early_stopper.stop:
-            early_stopper.print_stop()
-            return
+        if batch_count >= max_num_batch:
+            print('Stopping training..')
+            break
 
 
 def log_and_viz_results(results, batch_id, eval_count, visualiser, start):
@@ -196,8 +198,8 @@ def log_and_viz_results(results, batch_id, eval_count, visualiser, start):
     visualiser.plot(X, data_gen, title='Generator loss', legend=['Loss'], iteration=3, update='append')
 
     visualiser.image(results['images'], title='Source image', iteration=0)
-    visualiser.image(results['transformed'], title='Transformed image', iteration=1)
-    visualiser.image(results['segmented'], title='Segmented image', iteration=2)
+    visualiser.image(results['transformed'], title='Transformed image - batch {}'.format(batch_id), iteration=1)
+    visualiser.image(results['segmented'], title='Segmented image - batch {}'.format(batch_id)', iteration=2)
 
 
 if __name__ == '__main__':
