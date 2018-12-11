@@ -1,4 +1,4 @@
-.PHONY: all clean segnet tiny-segnet segnet_strided_upsample
+.PHONY: all clean segnet tiny-segnet segnet_strided_upsample tiny-transfer transfer models/transfer.pth
 
 # default args
 local=false
@@ -10,18 +10,19 @@ ifeq ($(local), false)
 DATA_DIR=/data/lisa/data/duckietown-segmentation/data
 MODEL_DIR=/data/milatmp1/$(USER)/duckietown-segmentation/models/$(run_name)
 VISDOM_DIR=/data/milatmp1/$(USER)/duckietown-segmentation/visdom/$(run_name)
+PRE_TRAINED_PATH=/data/milatmp1/$(USER)/duckietown-segmentation/models/pre-trained
 TMP_DATA_DIR=/Tmp/$(USER)/segmentation-transfer/data
 else
 DATA_DIR=./data
 MODEL_DIR=./models/$(run_name)
 VISDOM_DIR=./visdom/$(run_name)
+PRE_TRAINED_PATH=./models/pre-trained
 TMP_DATA_DIR=/tmp/segmentation-transfer/data
 endif
 
 # hack for pointing to files
 data/videos/download.info=$(DATA_DIR)/videos/download.info
-data/videos/real.hdf5=$(DATA_DIR)/videos/real.hdf5
-data/hdf5/real.hdf5=$(DATA_DIR)/hdf5/real.hdf5
+data/videos/real.npy=$(DATA_DIR)/videos/real.npy
 data/split/real/.sentinel=$(DATA_DIR)/split/real/.sentinel
 data/split/class/.sentinel=$(DATA_DIR)/split/class/.sentinel
 data/split/sim/.sentinel=$(DATA_DIR)/split/sim/.sentinel
@@ -36,6 +37,7 @@ models/segnet_strided_upsample.pth=$(MODEL_DIR)/segnet_strided_upsample.pth
 all: models/segnet.pth
 
 clean:
+	rm -rf $(TMP_DATA_DIR)
 	rm -f $(MODEL_DIR)/*.pth
 	rm -f $(VISDOM_DIR)/*.out
 
@@ -48,15 +50,16 @@ $(data/videos/download.info):
 	$(DATA_DIR)/videos
 
 # extract frames
-data/videos/real.hdf5:$(data/videos/real.hdf5)
-$(data/videos/real.hdf5): $(data/videos/download.info)
-	python src/data/extract_frames.py $(DATA_DIR)/videos $(DATA_DIR)/hdf5/real.hdf5 \
+data/videos/real.npy:$(data/videos/real.npy)
+$(data/videos/real.npy): $(data/videos/download.info)
+	python src/data/extract_frames.py $(DATA_DIR)/videos $(DATA_DIR)/videos/real.npy \
 	--frame-skip 10
 
 # split real train/valid (ONLY REMOTE)
-data/hdf5/real.hdf5:$(data/hdf5/real.hdf5)
-$(data/hdf5/real.hdf5): $(data/videos/real.hdf5)
+data/split/real/.sentinel:$(data/split/real/.sentinel)
+$(data/split/real/.sentinel): $(data/videos/real.npy)
 	python src/data/split.py
+	@touch $@
 
 # make sentinel if all data is present
 data/split/.sentinel:$(data/split/.sentinel)
@@ -87,7 +90,7 @@ models/segnet.pth:$(models/segnet.pth)
 $(models/segnet.pth): $(tmp/data/split/.sentinel)
 	mkdir -p $(MODEL_DIR)
 	mkdir -p $(VISDOM_DIR)
-	python src/models/train.py \
+	python src/models/train_segmentation.py \
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
 	$(TMP_DATA_DIR)/split/class \
@@ -99,7 +102,7 @@ $(models/segnet.pth): $(tmp/data/split/.sentinel)
 
 # train only (no save)
 segnet: $(tmp/data/split/.sentinel)
-	python src/models/train.py \
+	python src/models/train_segmentation.py \
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
 	$(TMP_DATA_DIR)/split/class \
@@ -108,11 +111,38 @@ segnet: $(tmp/data/split/.sentinel)
 	--seg-model-name=segnet
 
 # train and save
+models/transfer.pth: $(tmp/data/split/.sentinel)
+	mkdir -p $(MODEL_DIR)
+	mkdir -p $(VISDOM_DIR)
+	python src/models/train_transfer.py \
+	$(TMP_DATA_DIR)/split/sim \
+	$(TMP_DATA_DIR)/split/real \
+	$(TMP_DATA_DIR)/split/class \
+	--run-name=$(run_name) \
+	--save-dir=$(MODEL_DIR) \
+	--visdom-dir=$(VISDOM_DIR) \
+	--config-file=$(config_file) \
+	--seg-model-name=segnet \
+	--seg-model-path=$(PRE_TRAINED_PATH)/segnet.pth \
+	--discr-model-name=dcgan_discr \
+	--gen-model-name=style_transfer_gen
+
+# train only (no save)
+transfer: $(tmp/data/split/.sentinel)
+	python src/models/train_transfer.py \
+	$(TMP_DATA_DIR)/split/sim \
+	$(TMP_DATA_DIR)/split/real \
+	$(TMP_DATA_DIR)/split/class \
+	--run-name=$(run_name) \
+	--config-file=$(config_file) \
+	--seg-model-path=$(PRE_TRAINED_PATH)/segnet.pth
+
+# train and save
 models/segnet_strided_upsample.pth:$(models/segnet_strided_upsample.pth)
 $(models/segnet_strided_upsample.pth): $(tmp/data/split/.sentinel)
 	mkdir -p $(MODEL_DIR)
 	mkdir -p $(VISDOM_DIR)
-	python src/models/train.py \
+	python src/models/train_segmentation.py \
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
 	$(TMP_DATA_DIR)/split/class \
@@ -124,7 +154,7 @@ $(models/segnet_strided_upsample.pth): $(tmp/data/split/.sentinel)
 
 # train only (no save)
 segnet_strided_upsample: $(tmp/data/split/.sentinel)
-	python src/models/train.py \
+	python src/models/train_segmentation.py \
 	$(TMP_DATA_DIR)/split/sim \
 	$(TMP_DATA_DIR)/split/real \
 	$(TMP_DATA_DIR)/split/class \
@@ -141,3 +171,14 @@ tiny-segnet: $(tmp/data/split_tiny/.sentinel)
 	--run-name=$(run_name) \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet
+
+# train only (no save)
+tiny-transfer: $(tmp/data/split_tiny/.sentinel)
+	python src/models/train_transfer.py \
+	$(TMP_DATA_DIR)/split_tiny/sim \
+	$(TMP_DATA_DIR)/split_tiny/real \
+	$(TMP_DATA_DIR)/split_tiny/class \
+	--run-name=$(run_name) \
+	--config-file=$(config_file) \
+	--seg-model-path=$(PRE_TRAINED_PATH)/segnet.pth \
+	--batch-per-eval=1

@@ -37,3 +37,34 @@ def evaluate(model, partition_provider, device):
 
   outputs['accuracy'] = acc
   return outputs
+
+
+def evaluate_transfer(model_seg, model_transfer, data_iterator, device):
+
+  # evaluation
+  model_seg.eval()
+  model_transfer.eval()
+  batch_count = 0
+  outputs = dict()
+  with torch.no_grad():
+    for images in data_iterator:
+      batch_count += 1
+
+      # get transformed image in simulator domain
+      transformed = model_transfer(images.to(device))
+
+      # get segmentation
+      seg_logits = model_seg(transformed)
+      seg_preds = torch.argmax(seg_logits, dim=1).cpu()
+
+      if batch_count == 1:
+        outputs['images'] = images.cpu().numpy()
+        outputs['transformed'] = transformed.cpu().numpy()
+        outputs['segmented'] = logit_to_img(seg_preds.cpu().numpy()).transpose(0, 3, 1, 2)
+        break
+
+  del seg_logits
+  del seg_preds
+  torch.cuda.empty_cache()
+
+  return outputs
