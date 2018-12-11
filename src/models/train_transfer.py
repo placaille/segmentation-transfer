@@ -42,7 +42,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 @click.option('--port', type=str, default=None)
 @click.option('--reload', is_flag=True,
                help='Flag notifying that the experiment is being reloaded.')
-@click.option('--batch-per-eval', type=int, default=5000, help='default 5000')
+@click.option('--batch-per-eval', type=int, default=500, help='default 500')
 @click.option('--batch-per-save', type=int, default=5000, help='default 5000')
 @click.option('--max-num-batch', type=int, default=250000, help='default 250000')
 def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batch_size,
@@ -165,7 +165,7 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
         if seg_model_path:
             results.update(evaluate_transfer(model_seg, model_gen, real_data.get_valid_iterator(), device))
             # early_stopper.update(results, epoch_id=eval_count, batch_id=batch_count)
-        log_and_viz_results(results, batch_count, eval_count, visualiser, start)
+        log_and_viz_results(results, batch_count, eval_count, visualiser, start, save_dir)
 
         if save_dir and batch_count % batch_per_save == 0:
             model_gen.save(os.path.join(save_dir, '{}_{}.pth'.format(model_gen.name, batch_count)))
@@ -176,7 +176,7 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batc
             break
 
 
-def log_and_viz_results(results, batch_id, eval_count, visualiser, start):
+def log_and_viz_results(results, batch_id, eval_count, visualiser, start, save_dir):
 
     print('batch {:6d} - loss D(fake)/D(true)/G {:7.4f}/{:7.4f}/{:7.4f} - valid acc {:7.4f} - {:4.1f} secs' \
           .format(
@@ -198,8 +198,13 @@ def log_and_viz_results(results, batch_id, eval_count, visualiser, start):
     visualiser.plot(X, data_gen, title='Generator loss', legend=['Loss'], iteration=3, update='append')
 
     visualiser.image(results['images'], title='Source image', iteration=0)
-    visualiser.image(results['transformed'], title='Transformed image - batch {}'.format(batch_id), iteration=1)
-    visualiser.image(results['segmented'], title='Segmented image - batch {}'.format(batch_id)', iteration=2)
+    visualiser.image(results['transformed'], title='Transformed image', iteration=1)
+    visualiser.image(results['segmented'], title='Segmented image', iteration=2)
+
+    if save_dir:
+        np.save(os.path.join(save_dir, 'img_source.npy'), results['images'])
+        np.save(os.path.join(save_dir, 'img_transformed_{}.npy'.format(batch_id)), results['transformed'])
+        np.save(os.path.join(save_dir, 'img_segmented_{}.npy'.format(batch_id)), results['segmented'])
 
 
 if __name__ == '__main__':
