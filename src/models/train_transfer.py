@@ -42,7 +42,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 @click.option('--port', type=str, default=None)
 @click.option('--reload', is_flag=True,
                help='Flag notifying that the experiment is being reloaded.')
-@click.option('--batch-per-eval', type=int, default=1500, help='default 1500')
+@click.option('--batch-per-eval', type=int, default=500, help='default 500')
 def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir, batch_size,
          config_file, discr_model_name, gen_model_name, early_stop_patience,
          server, port, reload, run_name, batch_per_eval, seg_model_path, seg_model_name):

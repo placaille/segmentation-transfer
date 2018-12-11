@@ -59,15 +59,12 @@ def evaluate_transfer(model_seg, model_transfer, data_iterator, device):
 
       if batch_count == 1:
         outputs['images'] = images.cpu().numpy()
-        outputs['transformed'] = images.cpu().numpy()
+        outputs['transformed'] = transformed.cpu().numpy()
         outputs['segmented'] = logit_to_img(seg_preds.cpu().numpy()).transpose(0, 3, 1, 2)
+        break
 
-  del logits
+  del seg_logits
+  del seg_preds
   torch.cuda.empty_cache()
 
-  # compute accuracy
-  with np.errstate(divide='ignore', invalid='ignore'):
-    acc = np.divide(count.cpu().numpy(), total)
-
-  outputs['accuracy'] = acc
   return outputs
