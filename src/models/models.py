@@ -234,6 +234,7 @@ class SegNet(nn.Module):
         self.bn52 = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
         self.conv53 = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.bn53 = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
+        self.size_bottleneck = 512
 
         self.conv53d = nn.Conv2d(512, 512, kernel_size=3, padding=1)
         self.bn53d = nn.BatchNorm2d(512, momentum=batchNorm_momentum)
@@ -267,7 +268,7 @@ class SegNet(nn.Module):
 
         self.smooth_conv = nn.Conv2d(label_nbr, label_nbr, kernel_size=7, stride=1, padding=3)
 
-    def forward(self, x):
+    def forward(self, x, bottleneck=False):
         """Forward method."""
         # Stage 1
         x11 = F.relu(self.bn11(self.conv11(x)))
@@ -300,6 +301,8 @@ class SegNet(nn.Module):
         x53 = F.relu(self.bn53(self.conv53(x52)))
         x5p, id5 = F.max_pool2d(x53, kernel_size=2, stride=2, return_indices=True)
         size5 = x53.size()
+        if bottleneck:
+            return x5p
 
         # Stage 5d
         x5d = F.max_unpool2d(x5p, id5, kernel_size=2, stride=2, output_size=size5)

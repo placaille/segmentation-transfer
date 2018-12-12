@@ -68,3 +68,29 @@ def evaluate_transfer(model_seg, model_transfer, data_iterator, device):
   torch.cuda.empty_cache()
 
   return outputs
+
+
+def evaluate_segtransfer(model_seg, sim_data_iterator, real_data_iterator, device):
+
+  # evaluation
+  model_seg.eval()
+  outputs = dict()
+  with torch.no_grad():
+    real = iter(real_data_iterator).next()
+    # get segmentation
+    seg_logits = model_seg(real.to(device))
+    seg_preds = torch.argmax(seg_logits, dim=1).cpu()
+
+    outputs['real'] = real.cpu().numpy()
+    outputs['real_segmented'] = logit_to_img(seg_preds.cpu().numpy()).transpose(0, 3, 1, 2)
+
+    sim = iter(sim_data_iterator).next()
+    # get segmentation
+    seg_logits = model_seg(sim.to(device))
+    seg_preds = torch.argmax(seg_logits, dim=1).cpu()
+
+    outputs['sim'] = real.cpu().numpy()
+    outputs['sim_segmented'] = logit_to_img(seg_preds.cpu().numpy()).transpose(0, 3, 1, 2)
+
+  torch.cuda.empty_cache()
+  return outputs
