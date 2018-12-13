@@ -88,7 +88,7 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
     label_true = 1
     label_fake = 0
 
-    optim_gen = optim.Adam(filter(lambda x: 'd' not in x, model_seg.parameters()))
+    optim_gen = optim.Adam(filter(lambda x: 'd' not in x.__class__.__name__, model_seg.parameters()))
     optim_discr = optim.Adam(model_discr.parameters())
 
     print('Initializing misc..')
@@ -112,21 +112,24 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
         while batch_since_eval < batch_per_eval:
 
             batch_real = next(real_data).to(device)
-            batch_sim, _ = next(sim_data).to(device)
+            batch_sim = next(sim_data)[0].to(device)
             assert batch_sim.shape[0] == batch_real.shape[0]
             b_size = batch_sim.shape[0]
             batch_count += 1
 
             optim_discr.zero_grad()
             # train discriminator on true data (logD(x))
-            batch_real = model_seg(batch_sim.to(device), bottleneck=True)
-            scores_true = model_discr(batch_real.detach())
-            labels = torch.full((b_size, ), label_true).to(device)
-            loss_d_true = obj_adv(scores_true.view(-1), labels.to(device))
-            loss_d_true.backward()
+            emb_sim = model_seg(batch_sim.to(device), bottleneck=True)
+            print(batch_real.shape)
+            #scores_true = model_discr(emb_sim.detach())
+            #labels = torch.full((b_size, ), label_true).to(device)
+            #loss_d_true = obj_adv(scores_true.view(-1), labels.to(device))
+            #loss_d_true.backward()
 
             # train discriminator on fake data (log(1-D(G(x)))
             batch_fake = model_seg(batch_real.to(device), bottleneck=True)
+            print(batch_fake.shape)
+            exit(0)
             scores_fake = model_discr(batch_fake.detach())
             labels.fill_(label_fake)
             loss_d_fake = obj_adv(scores_fake.view(-1), labels)
