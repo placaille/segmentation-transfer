@@ -146,9 +146,8 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
             labels.fill_(label_true)
             loss_g_style = obj_adv(scores_fake.view(-1), labels)
             loss_g_tot = loss_g_style
-            if content_weight > 0:
-                loss_g_content = content_weight * content_obj(batch_fake, batch_real).sum((1, 2, 3)).mean()
-                loss_g_tot += loss_g_content
+            loss_g_content = content_weight * content_obj(batch_fake, batch_real).sum((1, 2, 3)).mean()
+            loss_g_tot += loss_g_content
             loss_g_tot.backward()
 
             optim_gen.step()
