@@ -339,7 +339,7 @@ class SegNet(nn.Module):
         torch.save(self.state_dict(), fname)
 
     def load(self, fname):
-        self.load_state_dict(torch.load(fname))
+        self.load_state_dict(torch.load(fname, map_location='cpu'))
 
 
 class TransformerNet(torch.nn.Module):
@@ -478,7 +478,7 @@ class DCGANDiscriminator(nn.Module):
         )
 
         # The height and width of downsampled image
-        flat_size = 128*8*10
+        flat_size = 128*3*5
         self.adv_layer = nn.Sequential(
             nn.Linear(flat_size, 1),
             nn.Sigmoid()
