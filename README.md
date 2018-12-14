@@ -1,6 +1,6 @@
 # Semantic segmentation transfer
 
-This documentation is split into two sections, a demo section that has all the information to showcase our pre-trained models and a training section where more information to reproduce our results can be found.
+This documentation is split into two sections, a [demo section](#line-segmentation-from-video-file) that has all the information to showcase our pre-trained models and a [training section](#training) where more information to reproduce our results can be found.
 
 ---
 
