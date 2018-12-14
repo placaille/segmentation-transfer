@@ -6,6 +6,7 @@ dependencies:
   - python=3.6
   - numpy
   - pytorch=0.4.1
+  - pyzmq
   - torchvision
   - pip:
     - pyyaml
@@ -16,3 +17,6 @@ dependencies:
     - requests
     - visdom
     - imageio
+    - pyglet
+    - opencv-python
+    - scikit-image
