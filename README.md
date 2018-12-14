@@ -86,9 +86,15 @@ Please note for the live demo of line segmentation in the simulator with manual 
 
 ## Data
 
-Data files `classes.hdf5`, `sim.hdf5` and `real.hdf5` must be placed in `hdf5`
+All data, pre-processed into `.npy` partitions and ready to be used can be found on the Mila cluster in the directory `/data/lisa/data/duckietown-segmentation/data/split`. Data files for training and validation must be placed in `./data/split/class`, `./data/split/sim` and `./data/split/real` under `train/valid` where the file format must be `.npy`.
 
-The distributions of the classes are the following
+*WARNING: All training `make` recipes require the data to be downloaded and pre-processed into `.npy` files. I.e. These recipes will process the real duckietown images automatically but won't generate the sim and segmented targets. Even if you copy `.data/split (including the .sentinel), it will try to download the real videos, unless you already have them.*
+
+### Simulated data and segmentation target
+
+**DIRE COMMENT FAIRE LES .NPY SIMULATED ET TARGETS**
+
+The distributions of the classes for the simulation segmented data are the following
 ```
 ('Valid set: ', {black: 17157, white: 1596, red: 138, yellow: 307})
 ('train set: ', {black: 17154, white: 1602, red: 137, yellow: 304})
@@ -99,7 +105,7 @@ Class 1: White
 Class 2: Red
 Class 3: Yellow
 
-### Adjusted weights in loss
+#### Adjusted weights in loss for simulated data
 
 Given our dataset is highly unbalanced (a lot more black pixels), we add an importance factor to the loss for each class which is inversely proportional to the number of pixels. I.e., reduce the importance of predicting correctly black pixels, and increase the importance of predicting the yellow pixels.
 
@@ -115,10 +121,10 @@ To compute the weights, we use the average number of pixels per image in the tra
 
 ### Real Duckiebot images
 
-The database of logs can be found [here](http://ipfs.duckietown.org:8080/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/gallery.html). Files can be directly downloaded from [here](https://gateway.ipfs.io/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/) using the following command.
+The database of logs can be found [here](http://ipfs.duckietown.org:8080/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/gallery.html). Video files can be directly downloaded from [here](https://gateway.ipfs.io/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/) and processed using the following command.
 
 ```
-make data/videos/download.info
+make data/videos/real.npy
 ```
 
 A list of videos used is listed in the file [`data/videos/list_of_videos.txt`](data/videos/list_of_videos.txt).

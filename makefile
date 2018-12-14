@@ -190,10 +190,10 @@ transfer-embed: $(tmp/data/split/.sentinel)
 # download models (only local)
 models/pre-trained/.sentinel:
 	@echo Downloading pre-trained models..
-	wget https://bit.ly/2BlpeBw -O ./models/pre-trained/segnet.pth -q --show-progress
-	wget https://bit.ly/2QwzzVR -O ./models/pre-trained/dcgan_discr.pth -q --show-progress
-	wget https://bit.ly/2EsPvSH -O ./models/pre-trained/style_transfer_gen.pth -q --show-progress
-	#wget ............ embedding-model
+	wget https://bit.ly/2BlpeBw -O $(PRE_TRAINED_PATH)/segnet.pth -q --show-progress
+	wget https://bit.ly/2QwzzVR -O $(PRE_TRAINED_PATH)/dcgan_discr.pth -q --show-progress
+	wget https://bit.ly/2EsPvSH -O $(PRE_TRAINED_PATH)/style_transfer_gen.pth -q --show-progress
+	wget https://bit.ly/2QyJASs -O $(PRE_TRAINED_PATH)/segnet_transfer.pth -q --show-progress
 	@touch $@
 
 ifndef output_file
