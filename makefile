@@ -1,4 +1,4 @@
-.PHONY: all clean segnet tiny-segnet segnet_strided_upsample tiny-transfer transfer models/transfer.pth
+.PHONY: segnet tiny-segnet segnet_strided_upsample tiny-transfer transfer transfer-embed models/style_transfer_gen.pth gif-transformed gif-embedding
 
 # default args
 remote=false
@@ -33,13 +33,6 @@ tmp/data/split_tiny/.sentinel=$(TMP_DATA_DIR)/split_tiny/.sentinel
 models/segnet.pth=$(MODEL_DIR)/segnet.pth
 models/segnet_strided_upsample.pth=$(MODEL_DIR)/segnet_strided_upsample.pth
 
-
-all: models/segnet.pth
-
-clean:
-	rm -rf $(TMP_DATA_DIR)
-	rm -f $(MODEL_DIR)/*.pth
-	rm -f $(VISDOM_DIR)/*.out
 
 # download videos
 data/videos/download.info:$(data/videos/download.info)
@@ -111,7 +104,7 @@ segnet: $(tmp/data/split/.sentinel)
 	--seg-model-name=segnet
 
 # train and save
-models/transfer.pth: $(tmp/data/split/.sentinel)
+models/style_transfer_gen.pth: $(tmp/data/split/.sentinel)
 	mkdir -p $(MODEL_DIR)
 	mkdir -p $(VISDOM_DIR)
 	python src/models/train_transfer.py \
@@ -184,7 +177,7 @@ tiny-transfer: $(tmp/data/split_tiny/.sentinel)
 	--batch-per-eval=1
 
 # train segnet with transfer
-transfer_embed: $(tmp/data/split/.sentinel)
+transfer-embed: $(tmp/data/split/.sentinel)
 	python src/models/train_segtransfer.py \
 	$(TMP_DATA_DIR)/split_tiny/sim \
 	$(TMP_DATA_DIR)/split/real \
@@ -193,3 +186,27 @@ transfer_embed: $(tmp/data/split/.sentinel)
 	--save-dir=$(MODEL_DIR) \
 	--config-file=$(config_file) \
 	--seg-model-name=segnet_transfer_embed
+
+# download models (only local)
+models/pre-trained/.sentinel:
+	@echo Downloading pre-trained models..
+	wget https://bit.ly/2BlpeBw -O ./models/pre-trained/segnet.pth -q --show-progress
+	wget https://bit.ly/2QwzzVR -O ./models/pre-trained/dcgan_discr.pth -q --show-progress
+	wget https://bit.ly/2EsPvSH -O ./models/pre-trained/style_transfer_gen.pth -q --show-progress
+	#wget ............ embedding-model
+	@touch $@
+
+ifndef output_file
+output_file=./results/segmented_lines.gif
+endif
+# convert input file to segmented
+gif-transformed: models/pre-trained/.sentinel
+	@echo Making $(input_file) into $(output_file) ..
+	python src/results/segment_lines.py \
+	$(input_file) \
+	$(output_file) \
+	./models/pre-trained/segnet.pth \
+	./models/pre-trained/style_transfer_gen.pth
+
+gif-embedding: models/pre-trained/.sentinel
+	#TODO

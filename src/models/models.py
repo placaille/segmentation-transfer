@@ -190,7 +190,7 @@ class SegNetStridedUpsample(nn.Module):
         torch.save(self.state_dict(), fname)
 
     def load(self, fname):
-        self.load_state_dict(torch.load(fname))
+        self.load_state_dict(torch.load(fname, map_location='cpu'))
 
 
 class SegNet(nn.Module):
@@ -390,7 +390,7 @@ class TransformerNet(torch.nn.Module):
         torch.save(self.state_dict(), fname)
 
     def load(self, fname):
-        self.load_state_dict(torch.load(fname))
+        self.load_state_dict(torch.load(fname, map_location='cpu'))
 
 
 class ConvLayer(torch.nn.Module):
@@ -495,4 +495,4 @@ class DCGANDiscriminator(nn.Module):
         torch.save(self.state_dict(), fname)
 
     def load(self, fname):
-        self.load_state_dict(torch.load(fname))
+        self.load_state_dict(torch.load(fname, map_location='cpu'))
