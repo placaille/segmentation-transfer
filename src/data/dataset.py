@@ -1,5 +1,4 @@
 import torch
-import h5py
 import torchvision
 import os
 import pickle as pkl

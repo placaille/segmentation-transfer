@@ -95,8 +95,9 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
     batch_count = 0
     results = dict()
     results['accuracy'] = 0
-    early_stopper = EarlyStopper('accuracy', early_stop_patience)
     visualiser = vis.Visualiser(server, port, run_name, reload, visdom_dir)
+    class_weights = torch.tensor([0.0051, 0.0551, 0.6538, 0.2860]).to(device)
+    loss_seg = nn.CrossEntropyLoss(weight=class_weights)
 
     print('Starting training..')
     for eval_count in count(start=1):
@@ -112,28 +113,28 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
         while batch_since_eval < batch_per_eval:
 
             batch_real = next(real_data).to(device)
-            batch_sim = next(sim_data)[0].to(device)
+            batch_sim, label_sim = next(sim_data)
+            batch_sim, label_sim = batch_sim.to(device), label_sim.to(device)
             assert batch_sim.shape[0] == batch_real.shape[0]
             b_size = batch_sim.shape[0]
             batch_count += 1
 
+            print(1)
             optim_discr.zero_grad()
             # train discriminator on true data (logD(x))
             emb_sim = model_seg(batch_sim.to(device), bottleneck=True)
-            print(batch_real.shape)
-            #scores_true = model_discr(emb_sim.detach())
-            #labels = torch.full((b_size, ), label_true).to(device)
-            #loss_d_true = obj_adv(scores_true.view(-1), labels.to(device))
-            #loss_d_true.backward()
+            scores_true = model_discr(emb_sim.detach())
+            labels = torch.full((b_size, ), label_true).to(device)
+            loss_d_true = obj_adv(scores_true.view(-1), labels.to(device))
+            loss_d_true.backward()
 
             # train discriminator on fake data (log(1-D(G(x)))
             batch_fake = model_seg(batch_real.to(device), bottleneck=True)
-            print(batch_fake.shape)
-            exit(0)
             scores_fake = model_discr(batch_fake.detach())
             labels.fill_(label_fake)
             loss_d_fake = obj_adv(scores_fake.view(-1), labels)
             loss_d_fake.backward()
+            print(2)
 
             optim_discr.step()
 
@@ -142,7 +143,11 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
             scores_fake = model_discr(batch_fake)
             labels.fill_(label_true)
             loss_g_fake = obj_adv(scores_fake.view(-1), labels)
-            loss_g_fake.backward()
+            logits = model_seg(batch_sim)
+            seg_loss = loss_seg(logits.permute(0, 2, 3, 1).contiguous().view(-1, num_classes),
+                                label_sim.view(-1).to(device))
+            (loss_g_fake + seg_loss).backward()
+            print(3)
 
             optim_gen.step()
 
