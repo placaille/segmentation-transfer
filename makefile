@@ -48,10 +48,10 @@ $(data/videos/real.npy): $(data/videos/download.info)
 	python src/data/extract_frames.py $(DATA_DIR)/videos $(DATA_DIR)/videos/real.npy \
 	--frame-skip 10
 
-# split real train/valid (ONLY REMOTE)
+# split real train/valid
 data/split/real/.sentinel:$(data/split/real/.sentinel)
 $(data/split/real/.sentinel): $(data/videos/real.npy)
-	python src/data/split.py
+	python src/data/split.py --data-dir $(DATA_DIR)
 	@touch $@
 
 # make sentinel if all data is present
