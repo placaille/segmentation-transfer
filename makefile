@@ -56,7 +56,7 @@ $(data/split/real/.sentinel): $(data/videos/real.npy)
 
 # make sentinel if all data is present
 data/split/.sentinel:$(data/split/.sentinel)
-$(data/split/.sentinel): $(data/split/real/.sentinel) $(data/split/class/.sentinel) $(data/split/sim/.sentinel)
+$(data/split/.sentinel): $(data/split/real/.sentinel)
 	@touch $@
 
 # make sentinel if all data is present
