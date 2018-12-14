@@ -1,64 +1,65 @@
-# segmentation-transfer
+# Semantic segmentation transfer
 
-To launch any `make` with reference to local directories (`./data` and `./models`), pass the anything to the variable `local` other than `false`. For example,
+This documentation is split into two sections, a demo section that has all the information to showcase our pre-trained models and a training section where more information to reproduce our results can be found.
+
+---
+
+## Line segmentation from video file
+
+We provide two ways of segmenting a video file coming from the duckiebot log database.  Any video file from the duckietown logs database can be used for the demo. When launching any of them, our pre-trained models will be downloaded automatically and a `.gif` will be created after processing the images. **Please ensure you have the necessary dependencies installed before launching the demo, see [this section](#environment) for more information**.
+
+For more information as to how to get a video file from the duckietown database and to see which ones were used to train our models, see the [this section](#real-duckiebot-images).
+
+*WARNING: The processing can take some time, especially if not using a GPU and the video file is large. By default, we keep a high framerate to have smooth video while limiting the length of the input video to about 3 minutes. These can be changed in the source code, if necessary.*
+
+#### Video transformed into simulator pixel space
+
+This is a demo where the image is brought back to the full simulator pixel space before applying our line segmentation model. While this method is useful to see the transformed version of the real image into the simulator pixel space, performance is noticeably worst.
+
+To process a video use the `make gif-transformed` recipe. For example,
 
 ```
-make all local=1
-make all local=true
+make gif-transformed input_file=duckie_video.mp4 output_file=duckie_transformed.gif
+```
+
+![20160503181216_milo_transformed.gif](./results/20160503181216_milo_transformed.gif)
+
+#### Video compressed into embedding space
+
+This is a demo where the image is directly segmented without being explicitly transformed to the full simulator pixel space. While this method offers less interpretability, performance is noticeably better.
+
+To process a video use the `make gif-embedding` recipe. For example,
+```
+make gif-embedding input_file=duckie_video.mp4 output_file=duckie_embedding.gif
+```
+
+## Running the segmentation demo on the duckietown simulator
+
+We provide a tool to test our pre-trained segmentation network live on the simulator while the user can manually control the agent. In order to run the simulation, simply run `$ python src/results/seg_control.py`.
+
+**Please ensure you have the necessary dependencies installed before launching the demo, see [this section](#environment) for more information**.
+
+![Simulator demo](./results/sim_segmented.gif)
+
+*WARNING: We tested the live demo on OSX. It might possibly not work on Linux out of the box.*
+
+---
+
+# Training
+
+To launch any `make` recipe with reference to local directories (`./data` and `./models`), pass any value to the variable `local` other than `false`. For example,
+
+```
+make models/segnet.pth local=1
+make models/segnet.pth local=true
 ```
 The above will run with the local subdirectories as reference.
 
 The default is to point to the Mila file system for data and models. See [the makefile](makefile) for more info.
 
-## Visualisation
+*N.B. This is not required for the demo, where everything is done locally.*
 
-It is possible, but no necessary, to monitor the training using Visdom. In order to use Visdom, as server must be running a priori.
-
-### Launching a server
-The instructions to launch a server are well documented [here](https://github.com/facebookresearch/visdom#usage)
-
-Launching a Visdom server on the MILA cluster is a bit more involved. A script is provided in `./scripts/start_visdom.sh`
-You need to define a $PORT that you are the only one using and choose a machine acting as $SERVER.
-
-#### Step 1
-On your local machine, add the following to the file `~/.ssh/config`
-```
-Host elisa1.iro.umontreal.ca
-User $MILAUSER
-LocalForward $PORT 127.0.0.1:$PORT
-```
-
-#### Step 2
-ssh to elisa1.
-
-#### Step 3
-Launch the provided script on a $SERVER.
-```
-sbatch -w $SERVER --mem=8000 ./scripts/start_visdom.sh $PORT
-```
-Fineprint: You need to have visdom installed. You can add a line in the script that activate a conda environment that have visdom.
-
-#### Step 4
-Enjoy your visdom server in the browser at the address `http://localhost:$PORT`. 
-Fineprint: You have to be connected throught ssh on elisa1 in order see your visdom server on your local machine.
-
-### Using the server
-Now that you have a server running, you may want to use it in your training script.
-To do so, add the following options when launching the training script: `--server http://$SERVER`, `--port $PORT`
-
-## Tiny dataset
-
-The code can run on tiny versions of the datasets using the following command.
-
-```
-make tiny-segnet
-```
-
- See [the makefile](makefile) for more info. Please be aware the tiny versions of the dataset can be made using [this file](src/data/tiny_dataset.py).
-
----
-
-# Environment
+## Environment
 
 Dependencies are listed in [`environment.yml`](environment.yml). To create the conda environment, use the following command.
 
@@ -66,7 +67,9 @@ Dependencies are listed in [`environment.yml`](environment.yml). To create the c
 conda env create -f environment.yml
 ```
 
-# Data
+Please note for the live demo of line segmentation in the simulator with manual control, you need have the duckietown simulator installed (instruction here: https://github.com/duckietown/simulator).
+
+## Data
 
 Data files `classes.hdf5`, `sim.hdf5` and `real.hdf5` must be placed in `hdf5`
 
@@ -81,7 +84,7 @@ Class 1: White
 Class 2: Red
 Class 3: Yellow
 
-## Adjusted weights in loss
+### Adjusted weights in loss
 
 Given our dataset is highly unbalanced (a lot more black pixels), we add an importance factor to the loss for each class which is inversly proportional to the number of pixels. I.e., reduce the importance of predicting correctly black pixels, and increase the importance of predicting the yellow pixels.
 
@@ -95,7 +98,7 @@ To compute the weights, we use the average number of pixels per image in the tra
 | Red | 0.7 % | 25 % | 65.38% |
 | Yellow | 1.6% | 25 % | 28.60% |
 
-## Real Duckiebot images
+### Real Duckiebot images
 
 The database of logs can be found [here](http://ipfs.duckietown.org:8080/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/gallery.html). Files can be directly downloaded from [here](https://gateway.ipfs.io/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/) using the following command.
 
@@ -112,19 +115,52 @@ Frames were extracted from the raw videos from the logs and downsampled from 640
 To extract the frames from the set of downloaded videos, simply use the following command.
 
 ```
-make data/videos/real.hdf5
+make data/videos/real.npy
 ```
 
-## Running the segmentation demo on the duckietown simulator
+### Tiny dataset
 
-![Simulator demo](./results/sim_segmented.gif)
+The code can run on tiny versions of the datasets using the following command.
 
-We provide a tool to test our segmentation network on the simulator.
+```
+make tiny-segnet
+```
 
-We tested the demo on OSX. It might possibly not work on Linux out of the box.
+ See [the makefile](makefile) for more info. Please be aware the tiny versions of the dataset can be made using [this file](src/data/tiny_dataset.py).
 
-The demo tool download the segmentation network (available https://bit.ly/2BlpeBw) if not present in the folder. The network is a little more that 100Mb.
 
-We provide a conda environment with `environment.yaml`. However, you need have the duckietown simulator installed (instruction here: https://github.com/duckietown/simulator)
+ ### Visualisation
 
-In order to run the simulation, simply run `$ python seg_control.py`
+ It is possible, but no necessary, to monitor the training using Visdom. In order to use Visdom, as server must be running a priori.
+
+ #### Launching a server
+ The instructions to launch a server are well documented [here](https://github.com/facebookresearch/visdom#usage)
+
+ Launching a Visdom server on the MILA cluster is a bit more involved. A script is provided in `./scripts/start_visdom.sh`
+ You need to define a $PORT that you are the only one using and choose a machine acting as $SERVER.
+
+ ##### Step 1
+ On your local machine, add the following to the file `~/.ssh/config`
+ ```
+ Host elisa1.iro.umontreal.ca
+ User $MILAUSER
+ LocalForward $PORT 127.0.0.1:$PORT
+ ```
+
+ ##### Step 2
+ ssh to elisa1.
+
+ ##### Step 3
+ Launch the provided script on a $SERVER.
+ ```
+ sbatch -w $SERVER --mem=8000 ./scripts/start_visdom.sh $PORT
+ ```
+ Fineprint: You need to have visdom installed. You can add a line in the script that activate a conda environment that have visdom.
+
+ ##### Step 4
+ Enjoy your visdom server in the browser at the address `http://localhost:$PORT`.
+ Fineprint: You have to be connected throught ssh on elisa1 in order see your visdom server on your local machine.
+
+ ### Using the server
+ Now that you have a server running, you may want to use it in your training script.
+ To do so, add the following options when launching the training script: `--server http://$SERVER`, `--port $PORT`
