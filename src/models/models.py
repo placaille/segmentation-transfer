@@ -464,6 +464,7 @@ class DCGANDiscriminator(nn.Module):
 
         def discriminator_block(in_filters, out_filters, bn=True):
             block = [   nn.Conv2d(in_filters, out_filters, 3, 1, 1),
+            #block = [   nn.Conv2d(in_filters, out_filters, 3, 2, 1),
                         nn.LeakyReLU(0.2, inplace=True),
                         nn.Dropout2d(0.25)]
             if bn:
@@ -478,7 +479,7 @@ class DCGANDiscriminator(nn.Module):
         )
 
         # The height and width of downsampled image
-        flat_size = 128*8*10
+        flat_size = 128*3*5
         self.adv_layer = nn.Sequential(
             nn.Linear(flat_size, 1),
             nn.Sigmoid()
