@@ -28,7 +28,7 @@ make gif-transformed input_file=duckie_video.mp4 output_file=duckie_transformed.
 
 #### Video compressed into embedding space
 
-This is a demo where the image is directly segmented without being explicitly transformed to the full simulator pixel space. While this method offers less interpretability, performance is noticeably better.
+This is a demo where the image is compressed into features from where the line segmentation model is applied. While this method offers less interpretability, performance is noticeably better.
 
 To process a video use the `make gif-embedding` recipe. For example,
 ```
