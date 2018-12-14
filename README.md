@@ -60,7 +60,7 @@ To train the segmentation model, use the `make models/segnet.pth` recipe.
 *WARNING: Training the segmentation model requires that the appropriate data is already downloaded. The data creation for the simulated data was not automated because of the very large size of the dataset (~40GB). See the [data section](#data) for more information*.
 
 ## Transfer model
-To train any of the transfer model (transformed and embedding models) to segment real duckiebot images, use the `make models/style_transfer_gen.pth` or `make models/________.pth` recipes.
+To train any of the transfer model (transformed and embedding models) to segment real duckiebot images, use the `make models/style_transfer_gen.pth` or `make models/segnet_transfer.pth` recipes.
 
 
 ## Running locally vs on cluster
