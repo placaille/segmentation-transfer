@@ -1,8 +1,14 @@
 import numpy as np
+import argparse
+import os
 
-src_file = '/data/lisa/data/duckietown-segmentation/data/videos/real.npy'
-tgt_train_file = '/data/lisa/data/duckietown-segmentation/data/split/real/train/real.train.0.npy'
-tgt_valid_file = '/data/lisa/data/duckietown-segmentation/data/split/real/valid/real.valid.0.npy'
+parser = argparse.ArgumentParser()
+parser.add_argument('--data-dir')
+args = parser.parse_args()
+
+src_file = os.path.join(args.data_dir, 'videos/real.npy')
+tgt_train_file = os.path.join(args.data_dir, 'split/real/train/real.train.0.npy')
+tgt_valid_file = os.path.join(args.data_dir, 'split/real/valid/real.valid.0.npy')
 
 all_data = np.load(src_file)
 
