@@ -123,8 +123,8 @@ We provide a tool to test our segmentation network on the simulator.
 
 We tested the demo on OSX. It might possibly not work on Linux out of the box.
 
-The demo tool download the segmentation network (available ) if not present in the folder. The a little more that 100Mb.
+The demo tool download the segmentation network (available https://bit.ly/2BlpeBw) if not present in the folder. The network is a little more that 100Mb.
 
-We provide a conda environment with `environment.yaml`. However, you need have the duckietown simulator installed (instruction here: )
+We provide a conda environment with `environment.yaml`. However, you need have the duckietown simulator installed (instruction here: https://github.com/duckietown/simulator)
 
-In order to run the simulation, simply run `$ python `
+In order to run the simulation, simply run `$ python seg_control.py`
