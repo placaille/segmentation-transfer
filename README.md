@@ -1,6 +1,6 @@
 # Semantic segmentation transfer
 
-This course project was done in the context of the Autonomous Vehicles (Duckietown) course given at UdeM during Fall 2018. 
+This course project was done in the context of the Autonomous Vehicles (Duckietown) course given at UdeM during Fall 2018. The slides used during our in-class presentation can are [`slides.pdf`](slides.pdf)
 
 All of the work was done in collaboration between Philippe Lacaille (@placaille) and Samuel Lavoie (@lavoiems).
 
