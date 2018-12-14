@@ -61,7 +61,7 @@ $(data/split/.sentinel): $(data/split/real/.sentinel)
 
 # make sentinel if all data is present
 data/split_tiny/.sentinel:$(data/split_tiny/.sentinel)
-$(data/split_tiny/.sentinel): $(data/split_tiny/real/.sentinel) $(data/split_tiny/class/.sentinel) $(data/split_tiny/sim/.sentinel)
+$(data/split_tiny/.sentinel): $(data/split_tiny/real/.sentinel)
 	@touch $@
 
 # copy to tmp location
