@@ -73,7 +73,9 @@ By default, any `make` recipe points to local directories (e.g. `./data` and `./
 ```
 make models/segnet.pth remote=true
 ```
-The above will run with the remote subdirectories as reference. See [the makefile](makefile) for more info about remote directories.
+The above will run with the remote subdirectories as reference
+
+The default remote directories are on the Mila clusters. See [the makefile](makefile) for more info about remote directories.
 
 *N.B. The demos can only be run locally.*
 
@@ -129,7 +131,7 @@ To compute the weights, we use the average number of pixels per image in the tra
 The database of logs can be found [here](http://ipfs.duckietown.org:8080/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/gallery.html). Video files can be directly downloaded from [here](https://gateway.ipfs.io/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/) and processed using the following command.
 
 ```
-make data/videos/real.npy
+make data/videos/download.info
 ```
 
 A list of videos used is listed in the file [`data/videos/list_of_videos.txt`](data/videos/list_of_videos.txt).
@@ -141,7 +143,7 @@ Frames were extracted from the raw videos from the logs and downsampled from 640
 To extract the frames from the set of downloaded videos, simply use the following command.
 
 ```
-make data/videos/real.npy
+make data/split/real/.sentinel
 ```
 
 ### Tiny dataset
