@@ -211,4 +211,8 @@ gif-transformed: models/pre-trained/.sentinel
 	$(PRE_TRAINED_PATH)/style_transfer_gen.pth
 
 gif-embedding: models/pre-trained/.sentinel
-	#TODO
+	@echo Making $(input_file) into $(output_file) ..
+	python src/results/segment_lines_embedding.py \
+	$(input_file) \
+	$(output_file) \
+	$(PRE_TRAINED_PATH)/segnet_transfer.pth

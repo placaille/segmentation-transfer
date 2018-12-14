@@ -35,8 +35,7 @@ To process a video use the `make gif-embedding` recipe. For example,
 make gif-embedding input_file=duckie_video.mp4 output_file=duckie_embedding.gif
 ```
 
-*ADD EMBEDDING GIF HERE*
-`![20160503181216_milo_embedding.gif](./results/20160503181216_milo_embedding.gif)`
+![20160503181216_milo_embedding.gif](./results/20160503181216_milo_embedding.gif)
 
 ## Running the segmentation demo on the duckietown simulator
 
