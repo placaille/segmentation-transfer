@@ -114,3 +114,17 @@ To extract the frames from the set of downloaded videos, simply use the followin
 ```
 make data/videos/real.hdf5
 ```
+
+## Running the segmentation demo on the duckietown simulator
+
+![Simulator demo](./results/sim_segmented.gif)
+
+We provide a tool to test our segmentation network on the simulator.
+
+We tested the demo on OSX. It might possibly not work on Linux out of the box.
+
+The demo tool download the segmentation network (available ) if not present in the folder. The a little more that 100Mb.
+
+We provide a conda environment with `environment.yaml`. However, you need have the duckietown simulator installed (instruction here: )
+
+In order to run the simulation, simply run `$ python `
