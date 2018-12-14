@@ -86,9 +86,11 @@ Please note for the live demo of line segmentation in the simulator with manual 
 
 ## Data
 
-All data, pre-processed into `.npy` partitions and ready to be used can be found on the Mila cluster in the directory `/data/lisa/data/duckietown-segmentation/data/split`. Data files for training and validation must be placed in `./data/split/class`, `./data/split/sim` and `./data/split/real` under `train/valid` where the file format must be `.npy`.
+All data, pre-processed into `.npy` partitions and ready to be used can be found on the Mila cluster in the directory `/data/lisa/data/duckietown-segmentation/data/split`.
 
-*WARNING: All training `make` recipes require the data to be downloaded and pre-processed into `.npy` files. I.e. These recipes will process the real duckietown images automatically but won't generate the sim and segmented targets. Even if you copy `.data/split (including the .sentinel), it will try to download the real videos, unless you already have them.*
+Data files for training and validation must be placed in `./data/split/class`, `./data/split/sim` and `./data/split/real` under `train/valid` where the file format must be `.npy`.
+
+*WARNING: All training `make` recipes require the data to be downloaded and pre-processed into `.npy` files. I.e. These recipes will process the real duckietown images automatically but won't generate the sim and segmented targets. Even if you copy `.data/split` (including the `.sentinel`), it will try to download the real videos, unless you already have them.*
 
 ### Simulated data and segmentation target
 
