@@ -120,6 +120,19 @@ models/style_transfer_gen.pth: $(tmp/data/split/.sentinel)
 	--discr-model-name=dcgan_discr \
 	--gen-model-name=style_transfer_gen
 
+# train segnet with transfer
+models/segnet_transfer.pth: $(tmp/data/split/.sentinel)
+	mkdir -p $(MODEL_DIR)
+	python src/models/train_segtransfer.py \
+	$(TMP_DATA_DIR)/split/sim \
+	$(TMP_DATA_DIR)/split/real \
+	$(TMP_DATA_DIR)/split/class \
+	--run-name=$(run_name) \
+	--save-dir=$(MODEL_DIR) \
+	--config-file=$(config_file) \
+	--seg-model-name=segnet \
+	--seg-model-path=$(PRE_TRAINED_PATH)/segnet.pth
+
 # train only (no save)
 transfer: $(tmp/data/split/.sentinel)
 	python src/models/train_transfer.py \
@@ -176,17 +189,6 @@ tiny-transfer: $(tmp/data/split_tiny/.sentinel)
 	--seg-model-path=$(PRE_TRAINED_PATH)/segnet.pth \
 	--batch-per-eval=1
 
-# train segnet with transfer
-transfer-embed: $(tmp/data/split/.sentinel)
-	python src/models/train_segtransfer.py \
-	$(TMP_DATA_DIR)/split_tiny/sim \
-	$(TMP_DATA_DIR)/split/real \
-	$(TMP_DATA_DIR)/split/class \
-	--run-name=$(run_name) \
-	--save-dir=$(MODEL_DIR) \
-	--config-file=$(config_file) \
-	--seg-model-name=segnet_transfer_embed
-
 # download models (only local)
 models/pre-trained/.sentinel:
 	@echo Downloading pre-trained models..
@@ -205,8 +207,8 @@ gif-transformed: models/pre-trained/.sentinel
 	python src/results/segment_lines.py \
 	$(input_file) \
 	$(output_file) \
-	./models/pre-trained/segnet.pth \
-	./models/pre-trained/style_transfer_gen.pth
+	$(PRE_TRAINED_PATH)/segnet.pth \
+	$(PRE_TRAINED_PATH)/style_transfer_gen.pth
 
 gif-embedding: models/pre-trained/.sentinel
 	#TODO

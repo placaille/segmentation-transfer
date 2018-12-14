@@ -79,6 +79,7 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
         assert seg_model_name in seg_model_path
         model_seg = models.get_seg_model(seg_model_name, num_classes, input_channels).to(device)
         model_seg.load(seg_model_path)
+        model_seg.name = 'segnet_transfer'
 
     model_discr = models.get_discriminator_model(discr_model_name, model_seg.size_bottleneck,
             stride=1, flat_size=128*5*3).to(device)
