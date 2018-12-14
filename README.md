@@ -1,5 +1,9 @@
 # Semantic segmentation transfer
 
+This course project was done in the context of the Autonomous Vehicles (Duckietown) course given at UdeM during Fall 2018. 
+
+All of the work was done in collaboration between Philippe Lacaille (@placaille) and Samuel Lavoie (@lavoiems).
+
 This documentation is split into two sections, a [demo section](#line-segmentation-from-video-file) that has all the information to showcase our pre-trained models and a [training section](#training) where more information to reproduce our results can be found.
 
 ---
