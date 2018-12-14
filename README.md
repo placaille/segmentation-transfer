@@ -52,17 +52,27 @@ We provide a tool to test our pre-trained segmentation network live on the simul
 
 # Training
 
-To launch any `make` recipe with reference to local directories (`./data` and `./models`), pass any value to the variable `local` other than `false`. For example,
+Recipes used to train our models can be found in the [`makefile`](makefile). In particular, the segmentation model must be trained before the models used to segment the real images can be trained.
+
+## Segmentation model
+To train the segmentation model, use the `make models/segnet.pth` recipe.
+
+*WARNING: Training the segmentation model requires that the appropriate data is already downloaded. The data creation for the simulated data was not automated because of the very large size of the dataset (~40GB). See the [data section](#data) for more information*.
+
+## Transfer model
+To train any of the transfer model (transformed and embedding models) to segment real duckiebot images, use the `make models/style_transfer_gen.pth` or `make models/________.pth` recipes.
+
+
+## Running locally vs on cluster
+
+By default, any `make` recipe points to local directories (e.g. `./data` and `./models`). To run remotely (on Mila cluster) pass the argument `remote=true`. For example,
 
 ```
-make models/segnet.pth local=1
-make models/segnet.pth local=true
+make models/segnet.pth remote=true
 ```
-The above will run with the local subdirectories as reference.
+The above will run with the remote subdirectories as reference. See [the makefile](makefile) for more info about remote directories.
 
-The default is to point to the Mila file system for data and models. See [the makefile](makefile) for more info.
-
-*N.B. This is not required for the demo, where everything is done locally.*
+*N.B. The demos can only be run locally.*
 
 ## Environment
 
@@ -91,9 +101,9 @@ Class 3: Yellow
 
 ### Adjusted weights in loss
 
-Given our dataset is highly unbalanced (a lot more black pixels), we add an importance factor to the loss for each class which is inversly proportional to the number of pixels. I.e., reduce the importance of predicting correctly black pixels, and increase the importance of predicting the yellow pixels.
+Given our dataset is highly unbalanced (a lot more black pixels), we add an importance factor to the loss for each class which is inversely proportional to the number of pixels. I.e., reduce the importance of predicting correctly black pixels, and increase the importance of predicting the yellow pixels.
 
-To compute the weights, we use the average number of pixels per image in the training set as mentionned above.
+To compute the weights, we use the average number of pixels per image in the training set as mentioned above.
 
 
 | Pixel color  | % | ideal % | adjusted class weight |
@@ -125,13 +135,14 @@ make data/videos/real.npy
 
 ### Tiny dataset
 
-The code can run on tiny versions of the datasets using the following command.
+The code can run on tiny versions of the datasets using the following recipes.
 
 ```
 make tiny-segnet
+make tiny-transfer
 ```
 
- See [the makefile](makefile) for more info. Please be aware the tiny versions of the dataset can be made using [this file](src/data/tiny_dataset.py).
+ See [the makefile](makefile) for more info. Please be aware the tiny versions of the dataset can be made using [this file](src/data/tiny_split_set.py).
 
 
  ### Visualisation
