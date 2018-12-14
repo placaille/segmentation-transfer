@@ -25,6 +25,7 @@ make gif-transformed input_file=duckie_video.mp4 output_file=duckie_transformed.
 ```
 
 ![20160503181216_milo_transformed.gif](./results/20160503181216_milo_transformed.gif)
+
 ![20160419233556_tesla_transformed.gif](./results/20160419233556_tesla_transformed.gif)
 
 #### Video compressed into embedding space
@@ -37,6 +38,7 @@ make gif-embedding input_file=duckie_video.mp4 output_file=duckie_embedding.gif
 ```
 
 ![20160503181216_milo_embedding.gif](./results/20160503181216_milo_embedding.gif)
+
 ![20160419233556_tesla_embedding.gif](./results/20160419233556_tesla_embedding.gif)
 
 ## Running the segmentation demo on the duckietown simulator
