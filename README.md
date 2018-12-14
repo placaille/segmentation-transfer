@@ -6,9 +6,11 @@ This documentation is split into two sections, a demo section that has all the i
 
 ## Line segmentation from video file
 
-We provide two ways of segmenting a video file coming from the duckiebot log database.  Any video file from the duckietown logs database can be used for the demo. When launching any of them, our pre-trained models will be downloaded automatically and a `.gif` will be created after processing the images. **Please ensure you have the necessary dependencies installed before launching the demo, see [this section](#environment) for more information**.
+We provide two ways of segmenting a video file coming from the duckiebot log database.  Any video file from the duckietown logs database can be used for the demo. When launching any of them, our pre-trained models will be downloaded automatically and a `.gif` will be created after processing the images.
 
 For more information as to how to get a video file from the duckietown database and to see which ones were used to train our models, see the [this section](#real-duckiebot-images).
+
+ **Please ensure you have the necessary dependencies installed before launching the demo, see [this section](#environment) for more information**.
 
 *WARNING: The processing can take some time, especially if not using a GPU and the video file is large. By default, we keep a high framerate to have smooth video while limiting the length of the input video to about 3 minutes. These can be changed in the source code, if necessary.*
 
