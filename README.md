@@ -1,5 +1,9 @@
 # Semantic segmentation transfer
 
+This course project was done in the context of the Autonomous Vehicles (Duckietown) course given at UdeM during Fall 2018. The slides used during our in-class presentation can are [`slides.pdf`](slides.pdf)
+
+All of the work was done in collaboration between Philippe Lacaille ([@placaille](https://github.com/placaille)) and Samuel Lavoie ([@lavoiems](https://github.com/lavoiems)).
+
 This documentation is split into two sections, a [demo section](#line-segmentation-from-video-file) that has all the information to showcase our pre-trained models and a [training section](#training) where more information to reproduce our results can be found.
 
 ---
@@ -26,17 +30,20 @@ make gif-transformed input_file=duckie_video.mp4 output_file=duckie_transformed.
 
 ![20160503181216_milo_transformed.gif](./results/20160503181216_milo_transformed.gif)
 
+![20160419233556_tesla_transformed.gif](./results/20160419233556_tesla_transformed.gif)
+
 #### Video compressed into embedding space
 
-This is a demo where the image is directly segmented without being explicitly transformed to the full simulator pixel space. While this method offers less interpretability, performance is noticeably better.
+This is a demo where the image is compressed into features from where the line segmentation model is applied. While this method offers less interpretability, performance is noticeably better.
 
 To process a video use the `make gif-embedding` recipe. For example,
 ```
 make gif-embedding input_file=duckie_video.mp4 output_file=duckie_embedding.gif
 ```
 
-*ADD EMBEDDING GIF HERE*
-`![20160503181216_milo_embedding.gif](./results/20160503181216_milo_embedding.gif)`
+![20160503181216_milo_embedding.gif](./results/20160503181216_milo_embedding.gif)
+
+![20160419233556_tesla_embedding.gif](./results/20160419233556_tesla_embedding.gif)
 
 ## Running the segmentation demo on the duckietown simulator
 
@@ -60,7 +67,7 @@ To train the segmentation model, use the `make models/segnet.pth` recipe.
 *WARNING: Training the segmentation model requires that the appropriate data is already downloaded. The data creation for the simulated data was not automated because of the very large size of the dataset (~40GB). See the [data section](#data) for more information*.
 
 ## Transfer model
-To train any of the transfer model (transformed and embedding models) to segment real duckiebot images, use the `make models/style_transfer_gen.pth` or `make models/________.pth` recipes.
+To train any of the transfer model (transformed and embedding models) to segment real duckiebot images, use the `make models/style_transfer_gen.pth` or `make models/segnet_transfer.pth` recipes.
 
 
 ## Running locally vs on cluster
@@ -70,7 +77,9 @@ By default, any `make` recipe points to local directories (e.g. `./data` and `./
 ```
 make models/segnet.pth remote=true
 ```
-The above will run with the remote subdirectories as reference. See [the makefile](makefile) for more info about remote directories.
+The above will run with the remote subdirectories as reference
+
+The default remote directories are on the Mila clusters. See [the makefile](makefile) for more info about remote directories.
 
 *N.B. The demos can only be run locally.*
 
@@ -132,7 +141,7 @@ To compute the weights, we use the average number of pixels per image in the tra
 The database of logs can be found [here](http://ipfs.duckietown.org:8080/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/gallery.html). Video files can be directly downloaded from [here](https://gateway.ipfs.io/ipfs/QmUbtwQ3QZKmmz5qTjKM3z8LJjsrKBWLUnnzoE5L4M7y7J/logs/) and processed using the following command.
 
 ```
-make data/videos/real.npy
+make data/videos/download.info
 ```
 
 A list of videos used is listed in the file [`data/videos/list_of_videos.txt`](data/videos/list_of_videos.txt).
@@ -144,7 +153,7 @@ Frames were extracted from the raw videos from the logs and downsampled from 640
 To extract the frames from the set of downloaded videos, simply use the following command.
 
 ```
-make data/videos/real.npy
+make data/split/real/.sentinel
 ```
 
 ### Tiny dataset
