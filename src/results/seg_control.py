@@ -25,7 +25,8 @@ import torch
 from matplotlib.figure import Figure
 from multiprocessing import Process, Pipe
 import multiprocessing as mp
-from demo_utils import plotting
+sys.path.append('src')
+from utils import plotting_demo as plotting
 import time
 from threading import Thread, Lock
 
@@ -74,13 +75,13 @@ lock = Lock()
 out_obs = np.zeros((120, 160, 3))
 
 net = SegNet(3, 4)
-if not os.path.isfile('models/segnet.pth'):
+if not os.path.isfile('models/pre-trained/segnet.pth'):
     print('Model not found. Downloading')
-    url = 'https://uc8f29bba686f8d63243e37138ab.dl.dropboxusercontent.com/cd/0/get/AXYFBov0NB2vIm3bZBlT-yEIBj13znBFOvggr-Sjk4tGUcZ_mDZcaUog1xIN3p_Tx-hPbY89m1tyou9qqio1ypyb1270aWLR5Ec7Nr3sK3uTnaKQSqwMDVvbW7WYN2zgGMA7uAkklJNKuqW-bWGgbylRhT8P8ggo_BjZVM6gtPme9fs_GZwqLss5o9dMDlpVgfc/file?_download_id=753895269774370474260145502354998998149572511748667472358993912&_notify_domain=www.dropbox.com&dl=1'
+    url = 'https://bit.ly/2BlpeBw'
     r = requests.get(url, allow_redirects=True)
-    open('models/segnet.pth', 'wb').write(r.content)
+    open('models/pre-trained/segnet.pth', 'wb').write(r.content)
 
-net.load('models/segnet.pth')
+net.load('models/pre-trained/segnet.pth')
 i = 0
 comm1, comm_child1 = Pipe()
 comm2, comm_child2 = Pipe()
@@ -192,4 +193,3 @@ if __name__ == '__main__':
     child2.start()
     t.start()
     run_main()
-
