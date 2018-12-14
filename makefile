@@ -1,4 +1,4 @@
-.PHONY: segnet tiny-segnet segnet_strided_upsample tiny-transfer transfer models/transfer.pth gif-transformed gif-embedding
+.PHONY: segnet tiny-segnet segnet_strided_upsample tiny-transfer transfer models/style_transfer_gen.pth gif-transformed gif-embedding
 
 # default args
 local=false
@@ -104,7 +104,7 @@ segnet: $(tmp/data/split/.sentinel)
 	--seg-model-name=segnet
 
 # train and save
-models/transfer.pth: $(tmp/data/split/.sentinel)
+models/style_transfer_gen.pth: $(tmp/data/split/.sentinel)
 	mkdir -p $(MODEL_DIR)
 	mkdir -p $(VISDOM_DIR)
 	python src/models/train_transfer.py \
