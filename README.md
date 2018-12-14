@@ -90,6 +90,12 @@ All data, pre-processed into `.npy` partitions and ready to be used can be found
 
 Data files for training and validation must be placed in `./data/split/class`, `./data/split/sim` and `./data/split/real` under `train/valid` where the file format must be `.npy`.
 
+We provide pre-processed samples for each dataset
+Training set:
+[simulator](https://www.dropbox.com/s/5pxblfgjgw04fuq/sim.train.0.npy?dl=0), [classes](https://www.dropbox.com/s/8vlsfojd87ba81k/classes.train.0.npy?dl=0), [real](https://www.dropbox.com/s/jk04fk3jixexogg/real.train.0.npy?dl=0)
+Validation set:
+[simulator](https://www.dropbox.com/s/v1s3h0bb5j8jvrf/sim.valid.0.npy?dl=0), [classes](https://www.dropbox.com/s/zqphlao774o22vh/classes.valid.0.npy?dl=0), [real](https://www.dropbox.com/s/u7fi1l2up3b321j/real.valid.0.npy?dl=0)
+
 *WARNING: All training `make` recipes require the data to be downloaded and pre-processed into `.npy` files. I.e. These recipes will process the real duckietown images automatically but won't generate the sim and segmented targets. Even if you copy `.data/split` (including the `.sentinel`), it will try to download the real videos, unless you already have them.*
 
 ### Simulated data and segmentation target
