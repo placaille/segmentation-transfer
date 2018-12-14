@@ -84,7 +84,7 @@ def evaluate_segtransfer(model_seg, sim_data_iterator, real_data_iterator, devic
     outputs['real'] = real.cpu().numpy()
     outputs['real_segmented'] = logit_to_img(seg_preds.cpu().numpy()).transpose(0, 3, 1, 2)
 
-    sim = iter(sim_data_iterator).next()
+    sim = iter(sim_data_iterator).next()[0]
     # get segmentation
     seg_logits = model_seg(sim.to(device))
     seg_preds = torch.argmax(seg_logits, dim=1).cpu()

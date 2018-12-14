@@ -80,7 +80,8 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
         model_seg = models.get_seg_model(seg_model_name, num_classes, input_channels).to(device)
         model_seg.load(seg_model_path)
 
-    model_discr = models.get_discriminator_model(discr_model_name, model_seg.size_bottleneck).to(device)
+    model_discr = models.get_discriminator_model(discr_model_name, model_seg.size_bottleneck,
+            stride=1, flat_size=128*5*3).to(device)
     if save_dir:
         model_discr.save(os.path.join(save_dir, '{}_{}.pth'.format(model_discr.name, 0)))
 
@@ -119,7 +120,6 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
             b_size = batch_sim.shape[0]
             batch_count += 1
 
-            print(1)
             optim_discr.zero_grad()
             # train discriminator on true data (logD(x))
             emb_sim = model_seg(batch_sim.to(device), bottleneck=True)
@@ -134,7 +134,6 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
             labels.fill_(label_fake)
             loss_d_fake = obj_adv(scores_fake.view(-1), labels)
             loss_d_fake.backward()
-            print(2)
 
             optim_discr.step()
 
@@ -147,7 +146,6 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
             seg_loss = loss_seg(logits.permute(0, 2, 3, 1).contiguous().view(-1, num_classes),
                                 label_sim.view(-1).to(device))
             (loss_g_fake + seg_loss).backward()
-            print(3)
 
             optim_gen.step()
 
@@ -176,6 +174,7 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
 
         if save_dir and batch_count % batch_per_save == 0:
             # model_gen.save(os.path.join(save_dir, '{}_{}.pth'.format(model_gen.name, batch_count)))
+            model_seg.save(os.path.join(save_dir, '{}_{}.pth'.format(model_seg.name, batch_count)))
             model_discr.save(os.path.join(save_dir, '{}_{}.pth'.format(model_discr.name, batch_count)))
 
         if batch_count >= max_num_batch:
@@ -185,11 +184,10 @@ def main(data_sim_dir, data_real_dir, data_label_dir, save_dir, visdom_dir,
 
 def log_and_viz_results(results, batch_id, eval_count, visualiser, start, save_dir):
 
-    print('batch {:6d} - loss D/G {:7.4f}/{:7.4f} - {:4.1f} secs' \
+    print('batch {:6d} - loss D {:7.4f} - {:4.1f} secs' \
         .format(
         batch_id,
         results['loss_discr_fake'] + results['loss_discr_true'],
-        results['loss_gen_style'] + results['loss_gen_content'],
         timer()-start
     ))
 
@@ -209,8 +207,8 @@ def log_and_viz_results(results, batch_id, eval_count, visualiser, start, save_d
 
     if save_dir:
         np.save(os.path.join(save_dir, 'img_source.npy'), results['real'])
-        np.save(os.path.join(save_dir, 'img_transformed_{}.npy'.format(batch_id)), results['transformed'])
-        np.save(os.path.join(save_dir, 'img_segmented_{}.npy'.format(batch_id)), results['segmented'])
+        # np.save(os.path.join(save_dir, 'img_transformed_{}.npy'.format(batch_id)), results['transformed'])
+        # np.save(os.path.join(save_dir, 'img_segmented_{}.npy'.format(batch_id)), results['segmented'])
 
 
 if __name__ == '__main__':

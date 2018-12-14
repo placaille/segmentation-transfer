@@ -25,9 +25,9 @@ def get_generator_model(model_name, input_channels):
     return model
 
 
-def get_discriminator_model(model_name, input_channels):
+def get_discriminator_model(model_name, input_channels, **kwargs):
     if model_name == 'dcgan_discr':
-        model = DCGANDiscriminator(input_channels)
+        model = DCGANDiscriminator(input_channels, **kwargs)
     else:
         raise ValueError('{} not a valid model name'.format(model_name))
     model.name = model_name
@@ -459,11 +459,11 @@ class DCGANDiscriminator(nn.Module):
     DCGAN
     https://github.com/eriklindernoren/PyTorch-GAN/blob/master/implementations/dcgan/dcgan.py
     """
-    def __init__(self, input_channels):
+    def __init__(self, input_channels, stride=2, flat_size=128*8*10):
         super(DCGANDiscriminator, self).__init__()
 
         def discriminator_block(in_filters, out_filters, bn=True):
-            block = [   nn.Conv2d(in_filters, out_filters, 3, 1, 1),
+            block = [   nn.Conv2d(in_filters, out_filters, 3, stride, 1),
             #block = [   nn.Conv2d(in_filters, out_filters, 3, 2, 1),
                         nn.LeakyReLU(0.2, inplace=True),
                         nn.Dropout2d(0.25)]
@@ -479,7 +479,6 @@ class DCGANDiscriminator(nn.Module):
         )
 
         # The height and width of downsampled image
-        flat_size = 128*3*5
         self.adv_layer = nn.Sequential(
             nn.Linear(flat_size, 1),
             nn.Sigmoid()

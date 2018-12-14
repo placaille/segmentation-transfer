@@ -1,12 +1,12 @@
 .PHONY: all clean segnet tiny-segnet segnet_strided_upsample tiny-transfer transfer models/transfer.pth
 
 # default args
-local=false
+remote=false
 run_name=default
 config_file=template_config.yml
 
-# to run in local repository
-ifeq ($(local), false)
+# to run in remote repository
+ifeq ($(remote), true)
 DATA_DIR=/data/lisa/data/duckietown-segmentation/data
 MODEL_DIR=/data/milatmp1/$(USER)/duckietown-segmentation/models/$(run_name)
 VISDOM_DIR=/data/milatmp1/$(USER)/duckietown-segmentation/visdom/$(run_name)
@@ -182,3 +182,14 @@ tiny-transfer: $(tmp/data/split_tiny/.sentinel)
 	--config-file=$(config_file) \
 	--seg-model-path=$(PRE_TRAINED_PATH)/segnet.pth \
 	--batch-per-eval=1
+
+# train segnet with transfer
+transfer_embed: $(tmp/data/split/.sentinel)
+	python src/models/train_segtransfer.py \
+	$(TMP_DATA_DIR)/split_tiny/sim \
+	$(TMP_DATA_DIR)/split/real \
+	$(TMP_DATA_DIR)/split/class \
+	--run-name=$(run_name) \
+	--save-dir=$(MODEL_DIR) \
+	--config-file=$(config_file) \
+	--seg-model-name=segnet_transfer_embed
